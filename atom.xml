@@ -4,7 +4,7 @@
   <title><![CDATA[狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-07-31T16:46:58+08:00</updated>
+  <updated>2016-07-31T17:21:06+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -20,10 +20,7 @@
     <id>http://bgallon.github.io/blog/2016/07/31/activitysheng-ming-zhou-qi</id>
     <content type="html"><![CDATA[<h3>前言</h3>
 
-<p>经过两天的努力，搭建了Octopress,虽然有点老，但是感觉还不错，比起csdn这个超级方便，起码没有讨厌的广告，在我眼前晃来晃去，写起文章来，有种极客范；以前很少写文章，但是很多东西总是会慢慢忘记，就再此做个记录吧。<br >
-<code>
-    There is a literal backtick (`) here.
-</code></p>
+<p>经过两天的努力，搭建了Octopress,虽然有点老，但是感觉还不错，比起csdn这个超级方便，起码没有讨厌的广告，在我眼前晃来晃去，写起文章来，有种极客范；以前很少写文章，但是很多东西总是会慢慢忘记，就再此做个记录吧。<br ></p>
 ]]></content>
   </entry>
   
