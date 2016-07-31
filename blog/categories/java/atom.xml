@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[狂奔的蜗牛]]></title>
-  <link href="http://bgallon.github.io/atom.xml" rel="self"/>
+  <title><![CDATA[Category: java | 狂奔的蜗牛]]></title>
+  <link href="http://bgallon.github.io/blog/categories/java/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
   <updated>2016-07-31T16:46:58+08:00</updated>
   <id>http://bgallon.github.io/</id>
