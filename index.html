@@ -102,6 +102,72 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)/">Activity生命周期（二）</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-08-01T22:10:35+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>10:10 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h4>前言</h4>
+
+<p>这篇文章主要介绍下，异常情况Activity的生命周期，在这里说明这里的异常情况不是我们程序崩溃，而是指当系统配置发生变化或者内存不足时的情况。</p>
+
+<h4>一、系统内存不足</h4>
+
+<p>先介绍一下Activity的优先级，如下:</p>
+
+<ul>
+<li>前台Activity，可以与用户进行交互，优先级最高</li>
+<li>可见但不能进行交互的Activity，例如弹框中的Activity</li>
+<li>后台Activity，不可见，优先级最低</li>
+</ul>
+
+
+<p>当系统的内存比较紧张时，会按照这个优先级来回收销毁Activity，在销毁Activity时，会调用onSaveInstance方法，保存当前Activity的状态</p>
+
+<h4>二、系统配置发生变化</h4>
+
+<p>当应用启动时，系统会根据系统的配置加载资源，当系统配置发生变化时，默认情况下，Activity会被销毁并重新创建，当然我们也可以阻止其销毁。当系统配置发生变化后，Activity会执行方法onPause、onStop、onDestory方法；</p>
+
+<h4>三、阻止系统配置变化引起的销毁重建</h4>
+
+<p>系统的配置有很多内容，当系统某项配置发生变化时我们不想Activity被销毁重建，我们可以在AndroidManifest.xml文件中设置Activity的configChanges属性，这样当此项配置发生变化时，就不会销毁重启了，而是调用Activity的onConfigurationChanged方法，举个🌰：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;activity android:name=".DemoActivity" android:configChanges="orientation|screenSize|keyboardHidden"/&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+<p>只要你不想某项配置的变化导致Activity的销毁重启，你就可以配置进去，多个可以使用"|&ldquo;来增加</p>
+
+<h4>三、数据的保存和恢复</h4>
+
+<p>如果我们想在Activity异常销毁前存储一些数据怎么搞呢；别担心，在异常销毁时，会调用Activity的onSaveInstanceState方法，在此方法中我们可以保存当前Activity的状态等，当在启动调用onCreate方法时，注意onCreate方法有个Bundle参数，这个参数带有在onSaveInstanceState方法中保存的数据（具体是不是一个对象就不知道了，O(∩_∩)O哈哈~），这是我们就可以恢复数据了，除此之外系统还会调用onRestoreInstanceState方法，<strong><em>注意：</em></strong>当不是异常销毁重启时，并不会调用这个方法；在onCreate中使用参数恢复数据时，注意判断参数非空的情况，不是异常重启的情况，参数是为空的。</p>
+</div>
+  
+  
+
+
+      <!-- 评论的锚链接，这里先屏蔽掉 -->
+      <!--| <a href="/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)/#comments">Comments</a>-->
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/2016/07/31/activitysheng-ming-zhou-qi/">Activity生命周期（一）</a></h1>
     
     
@@ -172,15 +238,19 @@
     <section>
   <h3>文章分类</h3>
   <ul id="categories">
-    <li class='category'><a href='/blog/categories/activity/'>activity (1)</a></li>
-<li class='category'><a href='/blog/categories/andorid/'>andorid (1)</a></li>
-<li class='category'><a href='/blog/categories/生命周期/'>生命周期 (1)</a></li>
+    <li class='category'><a href='/blog/categories/activity/'>activity (2)</a></li>
+<li class='category'><a href='/blog/categories/andorid/'>andorid (2)</a></li>
+<li class='category'><a href='/blog/categories/生命周期/'>生命周期 (2)</a></li>
 
   </ul>
 </section>
 <section class="well">
   <ul id="recent_posts" class="nav nav-list">
     <li class="nav-header">Recent Posts</li>
+    
+      <li class="post">
+        <a href="/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)/">Activity生命周期（二）</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2016/07/31/activitysheng-ming-zhou-qi/">Activity生命周期（一）</a>

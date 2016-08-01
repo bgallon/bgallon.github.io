@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Activity生命周期（一） - 狂奔的蜗牛</title>
+  <title>Activity生命周期（二） - 狂奔的蜗牛</title>
   <meta name="author" content="fishpan">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://bgallon.github.io/blog/2016/07/31/activitysheng-ming-zhou-qi">
+  <link rel="canonical" href="http://bgallon.github.io/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -100,7 +100,7 @@
   
   <header class="page-header">
     
-      <h1 class="entry-title">Activity生命周期（一）</h1>
+      <h1 class="entry-title">Activity生命周期（二）</h1>
     
     
       <p class="meta">
@@ -109,7 +109,7 @@
 
 
 
-<time class='entry-date' datetime='2016-07-31T22:45:43+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>10:45 pm</span></time>
+<time class='entry-date' datetime='2016-08-01T22:10:35+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>10:10 pm</span></time>
         
       </p>
     
@@ -118,36 +118,38 @@
 
 <div class="entry-content"><h4>前言</h4>
 
-<p>经过两天的努力，搭建了Octopress,虽然有点老，但是感觉还不错，比起csdn这个超级方便，起码没有讨厌的广告，在我眼前晃来晃去，写起文章来，有种极客范；以前很少写文章，但是很多东西总是会慢慢忘记，就再此做个记录吧。开始今天的话题，Activity作为Android四大组件之一，是使用最为频繁的一种组件。下面主页解析一下Activity生命周期中的一些问题</p>
+<p>这篇文章主要介绍下，异常情况Activity的生命周期，在这里说明这里的异常情况不是我们程序崩溃，而是指当系统配置发生变化或者内存不足时的情况。</p>
 
-<h4>一、生命周期方法</h4>
+<h4>一、系统内存不足</h4>
 
-<p><img src="http://pic001.cnblogs.com/img/tea9/201008/2010080516521645.png" alt="Activity生命周期图" /><br>
-<strong><em>onCreate：</em></strong>Activity生命周期中第一个方法，我们可以进行一些初始化工作，比如加载布局和数据等<br>
-<strong><em>onStart：</em></strong>Activity已经可见了，但是还没有出现在前台，无法进行交互<br>
-<strong><em>onResume:</em></strong>Activity出现在前台，用户可以与其进行交互<br>
-<strong><em>onPause:</em></strong>Activity正在停止,在这个方法里主页不能进行耗时的处理，否则可能会影响新Activity的启动<br>
-<strong><em>onStop:</em></strong>Activity即将停止<br>
-<strong><em>onRestart:</em></strong>表示Activity正在重新启动，当当前Activity从不可见重新变为可见时调用。一般启动新的Activity又回来，会调动，或者按home键到桌面，又回到此Activity时调用。<br>
-<strong><em>onDestroy:</em></strong>Activity正在销毁，一般点击返回键时触发<br></p>
-
-<h4>二、Activity常见情形</h4>
+<p>先介绍一下Activity的优先级，如下:</p>
 
 <ul>
-<li>第一次启动，onCreate->onStart->onResume</li>
-<li>当启动新Activity或者点击Home回到桌面时，会继续调用onPause->onStop,但是当启动新的Activity是透明主题时，不会调用onStop方法</li>
-<li>当用户回到Activity时，会继续调用onRestart->onStart->onResume</li>
-<li>当用户点击返回键时，onPause->onStop->onDestory</li>
+<li>前台Activity，可以与用户进行交互，优先级最高</li>
+<li>可见但不能进行交互的Activity，例如弹框中的Activity</li>
+<li>后台Activity，不可见，优先级最低</li>
 </ul>
 
 
-<h4>三、特别说明</h4>
+<p>当系统的内存比较紧张时，会按照这个优先级来回收销毁Activity，在销毁Activity时，会调用onSaveInstance方法，保存当前Activity的状态</p>
 
-<ul>
-<li>onPause和onResume,onStop和onStart是配对的，看起来onPause和onStop，onStart和onResume方法的含义是差不多的，其实这几个方法的描述重点不用，onPause和onResume是描述是否可以进行交互；而onStart和onStop来描述是否可见。</li>
-<li>启动新的Activity时，onPause先进行调用，才会调用新的Activity的生命周期</li>
-</ul>
+<h4>二、系统配置发生变化</h4>
 
+<p>当应用启动时，系统会根据系统的配置加载资源，当系统配置发生变化时，默认情况下，Activity会被销毁并重新创建，当然我们也可以阻止其销毁。当系统配置发生变化后，Activity会执行方法onPause、onStop、onDestory方法；</p>
+
+<h4>三、阻止系统配置变化引起的销毁重建</h4>
+
+<p>系统的配置有很多内容，当系统某项配置发生变化时我们不想Activity被销毁重建，我们可以在AndroidManifest.xml文件中设置Activity的configChanges属性，这样当此项配置发生变化时，就不会销毁重启了，而是调用Activity的onConfigurationChanged方法，举个🌰：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;activity android:name=".DemoActivity" android:configChanges="orientation|screenSize|keyboardHidden"/&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+<p>只要你不想某项配置的变化导致Activity的销毁重启，你就可以配置进去，多个可以使用"|&ldquo;来增加</p>
+
+<h4>三、数据的保存和恢复</h4>
+
+<p>如果我们想在Activity异常销毁前存储一些数据怎么搞呢；别担心，在异常销毁时，会调用Activity的onSaveInstanceState方法，在此方法中我们可以保存当前Activity的状态等，当在启动调用onCreate方法时，注意onCreate方法有个Bundle参数，这个参数带有在onSaveInstanceState方法中保存的数据（具体是不是一个对象就不知道了，O(∩_∩)O哈哈~），这是我们就可以恢复数据了，除此之外系统还会调用onRestoreInstanceState方法，<strong><em>注意：</em></strong>当不是异常销毁重启时，并不会调用这个方法；在onCreate中使用参数恢复数据时，注意判断参数非空的情况，不是异常重启的情况，参数是为空的。</p>
 </div>
 
 
@@ -168,7 +170,7 @@
 
 
 
-<time class='entry-date' datetime='2016-07-31T22:45:43+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>10:45 pm</span></time>
+<time class='entry-date' datetime='2016-08-01T22:10:35+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>10:10 pm</span></time>
       
 
 <span class="categories">
@@ -210,11 +212,11 @@
     
     <ul class="pager">
       
-      <li><a href="/blog/archives">Blog Archives</a></li>
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/2016/07/31/activitysheng-ming-zhou-qi/" title="Previous Post:
+        Activity生命周期（一）">&laquo; Activity生命周期（一）</a></li>
       
-      <li class="next"><a class="basic-alignment right" href="/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)/"
-        title="Next Post: Activity生命周期（二）">Activity生命周期（二）
-        &raquo;</a></li>
+      <li><a href="/blog/archives">Blog Archives</a></li>
       
     </ul>
   </footer>
