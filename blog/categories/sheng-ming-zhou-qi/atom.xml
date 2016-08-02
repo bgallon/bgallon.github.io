@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 生命周期 | 狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/blog/categories/sheng-ming-zhou-qi/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-08-01T23:28:10+08:00</updated>
+  <updated>2016-08-02T10:08:12+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -50,7 +50,17 @@
 
 <h4>三、数据的保存和恢复</h4>
 
-<p>如果我们想在Activity异常销毁前存储一些数据怎么搞呢；别担心，在异常销毁时，会调用Activity的onSaveInstanceState方法，在此方法中我们可以保存当前Activity的状态等，当在启动调用onCreate方法时，注意onCreate方法有个Bundle参数，这个参数带有在onSaveInstanceState方法中保存的数据（具体是不是一个对象就不知道了，O(∩_∩)O哈哈~），这是我们就可以恢复数据了，除此之外系统还会调用onRestoreInstanceState方法，<strong><em>注意：</em></strong>当不是异常销毁重启时，并不会调用这个方法；在onCreate中使用参数恢复数据时，注意判断参数非空的情况，不是异常重启的情况，参数是为空的。</p>
+<p>如果我们想在Activity异常销毁前存储一些数据怎么搞呢；别担心，在异常销毁时，会调用Activity的onSaveInstanceState方法，在此方法中我们可以保存当前Activity的状态等，当在启动调用onCreate方法时，注意onCreate方法有个Bundle参数，这个参数带有在onSaveInstanceState方法中保存的数据（具体是不是一个对象就不知道了，O(∩_∩)O哈哈~），这是我们就可以恢复数据了，除此之外系统还会调用onRestoreInstanceState方法</p>
+
+<p><strong><em>注意：</em></strong>
+当不是异常销毁重启时，并不会调用这个方法；在onCreate中使用参数恢复数据时，注意判断参数非空的情况，不是异常重启的情况，参数是为空的。</p>
+
+<p><strong><em>调用时机：</em></strong>
+onSaveInstanceState是在onStop之前，具体是在onPause之前还是在onPause之后，这个不确定；
+onRestoreInstanceState方法是在onStart方法之后；</p>
+
+<p><strong><em>系统恢复数据：</em></strong>
+系统默认情况下，会帮我们保存Activity的状态，重启时恢复数据；在View中有和activity一样的方法onSaveInstanceState和onRestoreInstanceSate，具体保存那些数据可以看下其中的源码</p>
 ]]></content>
   </entry>
   
