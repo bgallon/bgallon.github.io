@@ -4,7 +4,7 @@
   <title><![CDATA[Category: andorid | 狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/blog/categories/andorid/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-08-02T10:08:12+08:00</updated>
+  <updated>2016-08-02T22:32:28+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -14,13 +14,149 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Activity生命周期（三）]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/02/activitysheng-ming-zhou-qi-(san-)/"/>
+    <updated>2016-08-02T10:19:00+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/02/activitysheng-ming-zhou-qi-(san-)</id>
+    <content type="html"><![CDATA[<p>上篇写到默认情况下系统会自动存储Activity的状态，也许你看到会马上实践一下，但是可能并没有得到预期的效果。</p>
+
+<!--more-->
+
+
+<h4>自动存储恢复状态-正确的姿势</h4>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?<span class="ni">&amp;gt;</span>
+</span><span class='line'><span class="ni">&amp;lt;</span>RelativeLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+</span><span class='line'>    android:layout_width=&quot;match_parent&quot;
+</span><span class='line'>    android:layout_height=&quot;match_parent&quot;<span class="ni">&amp;gt;</span>
+</span><span class='line'>    <span class="ni">&amp;lt;</span>EditText
+</span><span class='line'>        android:layout_width=&quot;match_parent&quot;
+</span><span class='line'>        android:layout_height=&quot;wrap_content&quot;
+</span><span class='line'>        android:id=&quot;@+id/main_edit&quot;/<span class="ni">&amp;gt;</span>
+</span><span class='line'><span class="ni">&amp;lt;</span>/RelativeLayout<span class="ni">&amp;gt;</span>
+</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>OK,这样系统就可以保存EditText的状态啦</p>
+
+<p><strong><em>注意：</em></strong>
+必须设置id，系统才会帮我们保存控件的状态，否则不会有任何效果</p>
+
+<h4>系统保存Activity的过程</h4>
+
+<p>首先我们来看下Activity中的onSaveInstanceStat方法：</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onSaveInstanceState</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">outState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">outState</span><span class="o">.</span><span class="na">putBundle</span><span class="o">(</span><span class="n">WINDOW_HIERARCHY_TAG</span><span class="o">,</span> <span class="n">mWindow</span><span class="o">.</span><span class="na">saveHierarchyState</span><span class="o">());</span>
+</span><span class='line'>    <span class="n">Parcelable</span> <span class="n">p</span> <span class="o">=</span> <span class="n">mFragments</span><span class="o">.</span><span class="na">saveAllState</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">outState</span><span class="o">.</span><span class="na">putParcelable</span><span class="o">(</span><span class="n">FRAGMENTS_TAG</span><span class="o">,</span> <span class="n">p</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">getApplication</span><span class="o">().</span><span class="na">dispatchActivitySaveInstanceState</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">outState</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>其中方法中的第一句，调用了Window中的saveHierarchyState方法，我们知道Window是一个抽象类，那我们来看下Window的子类PhoneWindow中的saveHierarchyState的方法：</p>
+
+<pre><code class="java">    public Bundle saveHierarchyState() {
+        ...此处省略几句代码
+        SparseArray&lt;Parcelable&gt; states = new SparseArray&lt;Parcelable&gt;();
+        mContentParent.saveHierarchyState(states);
+        outState.putSparseParcelableArray(VIEWS_TAG, states);
+        ...此处省略几句代码
+    }
+</code></pre>
+
+<p>我们看重点，其它代码就不贴了，可以看到，调用mContentParent的saveHierarchyState,mContentView是一个ViewGroup，ViewGroup中没有这个方法，我看下父类View</p>
+
+<pre><code class="java">    public void saveHierarchyState(SparseArray&lt;Parcelable&gt; container) {
+        dispatchSaveInstanceState(container);
+    }
+</code></pre>
+
+<p>直接调用了dispatchSaveInstanceState方法，注意这时我们应该看ViewGroup中dispatchSaveInstanceState方法</p>
+
+<pre><code class="java">    protected void dispatchSaveInstanceState(SparseArray&lt;Parcelable&gt; container) {
+        super.dispatchSaveInstanceState(container);
+        final int count = mChildrenCount;
+        final View[] children = mChildren;
+        for (int i = 0; i &lt; count; i++) {
+            View c = children[i];
+            if ((c.mViewFlags &amp; PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED) {
+                c.dispatchSaveInstanceState(container);
+            }
+        }
+    }
+</code></pre>
+
+<p>大致做了两件事情，第一个调用本身的dispatchSaveInstanceState，遍历子View并调用子View的dispatchSaveInstanceState方法；</p>
+
+<pre><code class="java">    protected void dispatchSaveInstanceState(SparseArray&lt;Parcelable&gt; container) {
+        if (mID != NO_ID &amp;&amp; (mViewFlags &amp; SAVE_DISABLED_MASK) == 0) {
+            mPrivateFlags &amp;= ~PFLAG_SAVE_STATE_CALLED;
+            Parcelable state = onSaveInstanceState();
+            if ((mPrivateFlags &amp; PFLAG_SAVE_STATE_CALLED) == 0) {
+                throw new IllegalStateException(
+                        "Derived class did not call super.onSaveInstanceState()");
+            }
+            if (state != null) {
+                // Log.i("View", "Freezing #" + Integer.toHexString(mID)
+                // + ": " + state);
+                container.put(mID, state);
+            }
+        }
+    }
+</code></pre>
+
+<p>OK，重点来了，我们发现当id为空时，不会保存View的状态；整个保存状态分析就算完了。</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Activity生命周期（二）]]></title>
     <link href="http://bgallon.github.io/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)/"/>
     <updated>2016-08-01T22:10:35+08:00</updated>
     <id>http://bgallon.github.io/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)</id>
-    <content type="html"><![CDATA[<h4>前言</h4>
+    <content type="html"><![CDATA[<p>这篇文章主要介绍下，异常情况Activity的生命周期，在这里说明这里的异常情况不是我们程序崩溃，而是指当系统配置发生变化或者内存不足时的情况。</p>
 
-<p>这篇文章主要介绍下，异常情况Activity的生命周期，在这里说明这里的异常情况不是我们程序崩溃，而是指当系统配置发生变化或者内存不足时的情况。</p>
+<!--more-->
+
 
 <h4>一、系统内存不足</h4>
 
@@ -69,9 +205,10 @@ onRestoreInstanceState方法是在onStart方法之后；</p>
     <link href="http://bgallon.github.io/blog/2016/07/31/activitysheng-ming-zhou-qi/"/>
     <updated>2016-07-31T22:45:43+08:00</updated>
     <id>http://bgallon.github.io/blog/2016/07/31/activitysheng-ming-zhou-qi</id>
-    <content type="html"><![CDATA[<h4>前言</h4>
+    <content type="html"><![CDATA[<p>经过两天的努力，搭建了Octopress,虽然有点老，但是感觉还不错，比起csdn这个超级方便，起码没有讨厌的广告，在我眼前晃来晃去，写起文章来，有种极客范；以前很少写文章，但是很多东西总是会慢慢忘记，就再此做个记录吧。开始今天的话题，Activity作为Android四大组件之一，是使用最为频繁的一种组件。下面主页解析一下Activity生命周期中的一些问题</p>
 
-<p>经过两天的努力，搭建了Octopress,虽然有点老，但是感觉还不错，比起csdn这个超级方便，起码没有讨厌的广告，在我眼前晃来晃去，写起文章来，有种极客范；以前很少写文章，但是很多东西总是会慢慢忘记，就再此做个记录吧。开始今天的话题，Activity作为Android四大组件之一，是使用最为频繁的一种组件。下面主页解析一下Activity生命周期中的一些问题</p>
+<!--more-->
+
 
 <h4>一、生命周期方法</h4>
 
