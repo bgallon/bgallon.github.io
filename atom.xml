@@ -4,7 +4,7 @@
   <title><![CDATA[狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-08-02T22:32:28+08:00</updated>
+  <updated>2016-08-06T15:20:55+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -12,6 +12,70 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Activity启动模式]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/05/activityqi-dong-mo-shi/"/>
+    <updated>2016-08-05T23:01:49+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/05/activityqi-dong-mo-shi</id>
+    <content type="html"><![CDATA[<p>launchmode是Android一个非常重要的概念，关系到Activity实例的创建和重用；但是他比较琐碎，好多细节需要注意，分清各个模式的具体含义，会让你更好的理解并掌握它。Activity的启动模式有standard、singleTop、singleTask、singleInstance四种，我们可以在声明activity组件时设置lanunchmode值指定启动模式。</p>
+
+<!--more-->
+
+
+<h4>Standed模式</h4>
+
+<p>standard模式（标准模式）是activity默认的启动模式，此种模式下，没启动一次Activity都会重新创建一个Activity实例，一个任务栈中可以有多个实例，也许比较傻，哈哈，这就是默认的standard模式</p>
+
+<h4>SingleTop模式</h4>
+
+<p>栈顶复用模式，通过名字我们就可以知道它大概的意思，就是当启动的Activity在任务栈栈顶时，就不在重新创建一个Activity实例啦，直接复用就行了，这个时候要特别注意，他不会再重新执行以下onCreate、onStart、onResume生命周期方法，因为Activity此时的状态并没有发生变化；一般情况下，我们可能会在onCreate中去加载数据，那么现在onCreate不会重新调用了，我该如何加载新的数据呢？别着急，系统早就为我们想到这一点，这个时候系统会调用Activity中的onNewIntent方法，我们在这里重新加载展示数据；举个🌰：假如现在任务栈中有ABC三个Activity（A在栈底，C在栈顶），我们这里就认为ABC都是singleTop启动模式，此时如果启动C的话，任务栈中的Activity不会有任何变化，因为C就在栈顶，不需要重新再创一个C实例，如果现在启动B，那么栈中Activity为ABCB，具体为什么我就不多说啦。</p>
+
+<h4>SingleTask模式</h4>
+
+<p>栈内复用模式，这里是什么意思呢？就是要启动的Activity在任务重存在，不管在栈的什么位置，都不会重新创建新的实例，和singleTop模式类似，当栈中存在要启动的Activity时，只会调用此Activity的onNewIntent方法；比如现在我们要启动Activity A，如果当前任务中存在A，那么就会调用A中onNewIntent方法，如果不存A，就会重新创建Activity A,并压入栈中。举几个🌰🌰：</p>
+
+<ul>
+<li>任务栈S1中有ABC三个Activity，如果此时已SingleTask模式启动Activity D，其所需要的任务栈为S2，由于S2栈和Activity D都不存在，所以首先会创建一个新的任务栈s2,然后创建一个Activity D实例，放入S2中。</li>
+<li>如果Activity D需要的任务栈为S1情况会怎样呢？此时由于任务栈已经存在，但是Activity D并不在任务栈中，所以会创建Activity D实例，并放到S1栈中</li>
+<li>建设现在S1栈中有ABDC四个Activity，现在要以SingleTask模式启动Activity D，其所需要的任务栈为S1，那么此时由于S1和Activity D都存在了，所以不会重新创建，但是这时栈内的情况会变成什么样呢？答案是：ABD，那C去哪儿了？被销毁了！singleTask默认有clearTop效果，会把Activity D上的Activity出栈。</li>
+</ul>
+
+
+<h4>SingleInstance模式</h4>
+
+<p>单实例模式，它和singleTask类似，但是有一点区别，就是只能单独在一个任务栈中</p>
+
+<h4>任务栈</h4>
+
+<p>前文一曾多次提到任务栈，任务栈就是一个具有栈结构的容器，可以防止多个Activity;当启动一个应用时，系统会创建一个task,来放置根Activity；默认情况下，Activity会放在同一个task中，如果启动一个新的Activity的就把它压入栈顶，按返回键就把栈顶的Activity的弹出task，之前的Activity的又被显示出来，如果此时task中没有Activity,将会回到桌面；另外应用之间的task是相互独立的，比如我启动应用A，回到桌面有启动应用B，我还可以回到桌面再次启动A，但是内容并不会发生变化，之前应用A中的task还依然保留着。</p>
+
+<h4>affinity</h4>
+
+<p>有时，Android需要知道一个Activity他所属的task，就是通过这个属性来确定的。默认情况下，affinity的值为应用的包名，我也可以通过taskaffinity进行设置，其有两个作用：</p>
+
+<ul>
+<li>根据affinity重新为Activity选择宿主task</li>
+<li>启动singleTask的Activity，会根据affinity查找或者重新创建一个task</li>
+</ul>
+
+
+<h4>常见的flags</h4>
+
+<ul>
+<li>FLAG_ACTIVITY_NEW_TASK:当启动activity的intent中设置了此flag时，系统会寻找或者重新创建一个task来存放activity，寻找的依据就是activity的affinity，如过找到了一个task，则将此Activity放到这个task，如果找不到的话，就创建一个task，并把activity压入栈中，<strong><em>注意：</em></strong>如果同一个应用中的activity的taskaffinity使用的默认值或者设置的同一个值，在应用内使用这个标记是没有任何作用的，因为当前的task就是要找的task</li>
+<li>FLAG_ACTIVITY_CLEAR_TOP：当启动的Activity的intent中设置了这个标记，如果栈中存在要启动的Activity，则会把此Activity之上的Activity出栈；例如在MainActivity启动SecondActivity，在SecondActivity启动ThirdActivity，此时在ThirdActivity中启动MainActivity并在启动的intent中增加FLAG_ACTIVITY_CLEAR_TOP标记，此时，SecondActivity，ThirdActivity将会出栈，MainActivity重新出现</li>
+<li>FLAG_ACTIVITY_SINGLE_TOP:当要启动的Activity在task栈顶时，不会重新创建Activity，而是重用此Activity</li>
+</ul>
+
+
+<p>这里推荐几篇写的比较好的博客：</p>
+
+<p><a href="http://blog.csdn.net/liuhe688/article/details/6761337">Activity的task相关</a></p>
+
+<p><a href="http://blog.csdn.net/guolin_blog/article/details/41087993">Android任务和返回栈完全解析，细数那些你所不知道的细节 </a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Activity生命周期（三）]]></title>
