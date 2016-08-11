@@ -4,7 +4,7 @@
   <title><![CDATA[狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-08-06T15:20:55+08:00</updated>
+  <updated>2016-08-11T22:56:47+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -12,6 +12,122 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[IPC机制-序列化]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/08/ipcji-zhi-xu-lie-hua/"/>
+    <updated>2016-08-08T21:59:42+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/08/ipcji-zhi-xu-lie-hua</id>
+    <content type="html"><![CDATA[<p>IPC（Inter-Process Cmmunication）进程间通讯，两个进程间如何交换数据。进程和线程是不一样的，我们可以认为进程包含线程。下面我就开始一步一步的熟悉如何进行进程间通讯。</p>
+
+<!--more-->
+
+
+<h4>序列化</h4>
+
+<p>我们以往的开放的经验中或多或少的都接触过序列，Serializable、Parcelable两个接口我们总会与我们不期而遇，我们最常见的是当我们启动一个Activity时，需要传递一些复杂类型，这个时候我们就要通过序列化的方式进行传递。</p>
+
+<h4>Serializable接口</h4>
+
+<p>Serializables是Java提供的接口，其实它只是一个空接口什么都没有做，使用它实现序列化也是灰常简单，只需实现它就行。但是我们另外要做一件事，就是新加一个标识如下：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="kd">implements</span> <span class="n">Serializable</span><span class="o">{</span>
+</span><span class='line'>      <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4640203801029274924L</span><span class="o">;</span>
+</span><span class='line'>      <span class="kd">public</span> <span class="n">string</span> <span class="n">username</span><span class="o">;</span>
+</span><span class='line'>      <span class="kd">public</span> <span class="n">string</span> <span class="n">userid</span><span class="o">;</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>是的，记住一定要写上serialVersionUID这个字段，当然值不一定是这个，否者会有惊喜哦！！</p>
+
+<p>如果你不指定serialVersionUID这个值，也照样能够完成序列化，但是某些情况下可能报异常！我们接下来就来捯饬捯饬这个字段是干嘛用的；这个字段是用来辅助序列化和反序列化的，序列化的数据只有serialVersionUID与当前要反序列化的类中的serialVersionUID保持一致，才能正常的反序列化；当进行序列化的时候会保存serialVersionUID的值，在反序列化的时候再去对比是否相等；在不指定值得情况下，系统会计算当前类的hash值给serialVersionUID，一旦类发生变化这个值就会变化，从而出现崩溃，当然如果你修改了类的名字或者字段的类型，那么也同样会抛出异常。</p>
+
+<h4>Pacelable接口</h4>
+
+<p>Pacelable是Android特有的一个接口，相对于Serializable,它实现起来稍微复杂一点。实例如下</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="kd">implements</span> <span class="n">Parcelable</span> <span class="o">{</span>
+</span><span class='line'>      <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="o">;</span>
+</span><span class='line'>      <span class="kd">private</span> <span class="n">String</span> <span class="n">userid</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="kd">protected</span> <span class="nf">User</span><span class="o">(</span><span class="n">Parcel</span> <span class="n">in</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">username</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readString</span><span class="o">();</span>
+</span><span class='line'>          <span class="n">userid</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readString</span><span class="o">();</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">CREATOR</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
+</span><span class='line'>          <span class="nd">@Override</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="n">User</span> <span class="nf">createFromParcel</span><span class="o">(</span><span class="n">Parcel</span> <span class="n">in</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="k">return</span> <span class="k">new</span> <span class="nf">User</span><span class="o">(</span><span class="n">in</span><span class="o">);</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nd">@Override</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="n">User</span><span class="o">[]</span> <span class="nf">newArray</span><span class="o">(</span><span class="kt">int</span> <span class="n">size</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="k">return</span> <span class="k">new</span> <span class="n">User</span><span class="o">[</span><span class="n">size</span><span class="o">];</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">};</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nd">@Override</span>
+</span><span class='line'>      <span class="kd">public</span> <span class="kt">int</span> <span class="nf">describeContents</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nd">@Override</span>
+</span><span class='line'>      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">writeToParcel</span><span class="o">(</span><span class="n">Parcel</span> <span class="n">dest</span><span class="o">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">dest</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">dest</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">userid</span><span class="o">);</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong><em>注意</em></strong>这里一定注意writeToParcel(Parcel dest, int flags)和User(Parcel in)中读取或储存属性的顺序呢（猛敲黑板状），先存先读；</p>
+
+<h4>总结</h4>
+
+<p>注意，注意，注意重要的事情说三遍，这是必考点，记好笔记啦；Parcelable的性能比Serializable要好，内存开销方面比较小，所以内存在传递数据时推荐Parcelable,比如activity间传递数据时；但是Serializble序列化方便，可用在保存或者网络传输的时候，另外Android不同版本Parcelable可能会不同，所以不建议用它进行持久化。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Activity启动模式]]></title>
