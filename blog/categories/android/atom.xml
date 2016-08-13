@@ -4,7 +4,7 @@
   <title><![CDATA[Category: android | 狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/blog/categories/android/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-08-11T22:56:47+08:00</updated>
+  <updated>2016-08-13T15:46:15+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -12,6 +12,52 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[IPC机制-多进程]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/13/ipcji-zhi-duo-jin-cheng/"/>
+    <updated>2016-08-13T15:03:24+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/13/ipcji-zhi-duo-jin-cheng</id>
+    <content type="html"><![CDATA[<p>一个应用默认只有一个进程，这个进程的名字就是应用的包名，进程是系统分配资源和调度的基本单位，每个进程都要有自己的资源和空间，其它程序不能任意访问当前进程的空间，系统给每个进程分配的空间会有限制。</p>
+
+<!--more-->
+
+
+<p>但是这都是默认情况下的事情，伟大的程序员是不会屈服一个进程的，我就弄出多个进程来玩玩；Android系统也是蛮大方的，你要多个，好，我来满足你，你可以指定一些组件运行在不同的进程中，只需指定组件的：</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span>android:process
+</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>设置process属性的方式有两种：</p>
+
+<ul>
+<li>android:process=&ldquo;:remote&rdquo;,以冒号开头，冒号后边的字符是可以随意指定的。当然这只是一种缩写形式，全称应该是：包名+&ldquo;:remote"；这种形式表示该进程为当前应用的私有进程，其它应用的组件不可以和它跑在同一个进程中。</li>
+<li>android:process=&ldquo;xxx.xxx"表示运行在以这个名称的全局进程中，其它应用可以通过shareUID和他跑在同一个进程中；</li>
+</ul>
+
+
+<p>虽然开启多进程是非常非常简单，但是有很多坑，一不小心就掉进去了：</p>
+
+<ul>
+<li>Application多次创建，启动多进程的生活，Application会被多次创建，在application中我们可以通过当前进程名字，来初始化数据，防止无必要的初始化</li>
+<li>静态成员失效，各个进程是单独分配的内存，所以这里的静态成员变量将会失效</li>
+<li>文件共享，多个进程同时访问一个文件时，可能造成文件损坏丢失等情况</li>
+<li>断点调试的问题。调试就是跟踪程序运行过程中的堆栈信息，由于每个进程都有自己独立的内存空间和各自的堆栈，无法实现在不同的进程间调试</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[IPC机制-序列化]]></title>
@@ -144,6 +190,257 @@
 <h4>总结</h4>
 
 <p>注意，注意，注意重要的事情说三遍，这是必考点，记好笔记啦；Parcelable的性能比Serializable要好，内存开销方面比较小，所以内存在传递数据时推荐Parcelable,比如activity间传递数据时；但是Serializble序列化方便，可用在保存或者网络传输的时候，另外Android不同版本Parcelable可能会不同，所以不建议用它进行持久化。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Activity启动模式]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/05/activityqi-dong-mo-shi/"/>
+    <updated>2016-08-05T23:01:49+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/05/activityqi-dong-mo-shi</id>
+    <content type="html"><![CDATA[<p>launchmode是Android一个非常重要的概念，关系到Activity实例的创建和重用；但是他比较琐碎，好多细节需要注意，分清各个模式的具体含义，会让你更好的理解并掌握它。Activity的启动模式有standard、singleTop、singleTask、singleInstance四种，我们可以在声明activity组件时设置lanunchmode值指定启动模式。</p>
+
+<!--more-->
+
+
+<h4>Standed模式</h4>
+
+<p>standard模式（标准模式）是activity默认的启动模式，此种模式下，没启动一次Activity都会重新创建一个Activity实例，一个任务栈中可以有多个实例，也许比较傻，哈哈，这就是默认的standard模式</p>
+
+<h4>SingleTop模式</h4>
+
+<p>栈顶复用模式，通过名字我们就可以知道它大概的意思，就是当启动的Activity在任务栈栈顶时，就不在重新创建一个Activity实例啦，直接复用就行了，这个时候要特别注意，他不会再重新执行以下onCreate、onStart、onResume生命周期方法，因为Activity此时的状态并没有发生变化；一般情况下，我们可能会在onCreate中去加载数据，那么现在onCreate不会重新调用了，我该如何加载新的数据呢？别着急，系统早就为我们想到这一点，这个时候系统会调用Activity中的onNewIntent方法，我们在这里重新加载展示数据；举个🌰：假如现在任务栈中有ABC三个Activity（A在栈底，C在栈顶），我们这里就认为ABC都是singleTop启动模式，此时如果启动C的话，任务栈中的Activity不会有任何变化，因为C就在栈顶，不需要重新再创一个C实例，如果现在启动B，那么栈中Activity为ABCB，具体为什么我就不多说啦。</p>
+
+<h4>SingleTask模式</h4>
+
+<p>栈内复用模式，这里是什么意思呢？就是要启动的Activity在任务重存在，不管在栈的什么位置，都不会重新创建新的实例，和singleTop模式类似，当栈中存在要启动的Activity时，只会调用此Activity的onNewIntent方法；比如现在我们要启动Activity A，如果当前任务中存在A，那么就会调用A中onNewIntent方法，如果不存A，就会重新创建Activity A,并压入栈中。举几个🌰🌰：</p>
+
+<ul>
+<li>任务栈S1中有ABC三个Activity，如果此时已SingleTask模式启动Activity D，其所需要的任务栈为S2，由于S2栈和Activity D都不存在，所以首先会创建一个新的任务栈s2,然后创建一个Activity D实例，放入S2中。</li>
+<li>如果Activity D需要的任务栈为S1情况会怎样呢？此时由于任务栈已经存在，但是Activity D并不在任务栈中，所以会创建Activity D实例，并放到S1栈中</li>
+<li>建设现在S1栈中有ABDC四个Activity，现在要以SingleTask模式启动Activity D，其所需要的任务栈为S1，那么此时由于S1和Activity D都存在了，所以不会重新创建，但是这时栈内的情况会变成什么样呢？答案是：ABD，那C去哪儿了？被销毁了！singleTask默认有clearTop效果，会把Activity D上的Activity出栈。</li>
+</ul>
+
+
+<h4>SingleInstance模式</h4>
+
+<p>单实例模式，它和singleTask类似，但是有一点区别，就是只能单独在一个任务栈中</p>
+
+<h4>任务栈</h4>
+
+<p>前文一曾多次提到任务栈，任务栈就是一个具有栈结构的容器，可以防止多个Activity;当启动一个应用时，系统会创建一个task,来放置根Activity；默认情况下，Activity会放在同一个task中，如果启动一个新的Activity的就把它压入栈顶，按返回键就把栈顶的Activity的弹出task，之前的Activity的又被显示出来，如果此时task中没有Activity,将会回到桌面；另外应用之间的task是相互独立的，比如我启动应用A，回到桌面有启动应用B，我还可以回到桌面再次启动A，但是内容并不会发生变化，之前应用A中的task还依然保留着。</p>
+
+<h4>affinity</h4>
+
+<p>有时，Android需要知道一个Activity他所属的task，就是通过这个属性来确定的。默认情况下，affinity的值为应用的包名，我也可以通过taskaffinity进行设置，其有两个作用：</p>
+
+<ul>
+<li>根据affinity重新为Activity选择宿主task</li>
+<li>启动singleTask的Activity，会根据affinity查找或者重新创建一个task</li>
+</ul>
+
+
+<h4>常见的flags</h4>
+
+<ul>
+<li>FLAG_ACTIVITY_NEW_TASK:当启动activity的intent中设置了此flag时，系统会寻找或者重新创建一个task来存放activity，寻找的依据就是activity的affinity，如过找到了一个task，则将此Activity放到这个task，如果找不到的话，就创建一个task，并把activity压入栈中，<strong><em>注意：</em></strong>如果同一个应用中的activity的taskaffinity使用的默认值或者设置的同一个值，在应用内使用这个标记是没有任何作用的，因为当前的task就是要找的task</li>
+<li>FLAG_ACTIVITY_CLEAR_TOP：当启动的Activity的intent中设置了这个标记，如果栈中存在要启动的Activity，则会把此Activity之上的Activity出栈；例如在MainActivity启动SecondActivity，在SecondActivity启动ThirdActivity，此时在ThirdActivity中启动MainActivity并在启动的intent中增加FLAG_ACTIVITY_CLEAR_TOP标记，此时，SecondActivity，ThirdActivity将会出栈，MainActivity重新出现</li>
+<li>FLAG_ACTIVITY_SINGLE_TOP:当要启动的Activity在task栈顶时，不会重新创建Activity，而是重用此Activity</li>
+</ul>
+
+
+<p>这里推荐几篇写的比较好的博客：</p>
+
+<p><a href="http://blog.csdn.net/liuhe688/article/details/6761337">Activity的task相关</a></p>
+
+<p><a href="http://blog.csdn.net/guolin_blog/article/details/41087993">Android任务和返回栈完全解析，细数那些你所不知道的细节 </a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Activity生命周期（三）]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/02/activitysheng-ming-zhou-qi-(san-)/"/>
+    <updated>2016-08-02T10:19:00+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/02/activitysheng-ming-zhou-qi-(san-)</id>
+    <content type="html"><![CDATA[<p>上篇写到默认情况下系统会自动存储Activity的状态，也许你看到会马上实践一下，但是可能并没有得到预期的效果。</p>
+
+<!--more-->
+
+
+<h4>自动存储恢复状态-正确的姿势</h4>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?<span class="ni">&amp;gt;</span>
+</span><span class='line'><span class="ni">&amp;lt;</span>RelativeLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+</span><span class='line'>    android:layout_width=&quot;match_parent&quot;
+</span><span class='line'>    android:layout_height=&quot;match_parent&quot;<span class="ni">&amp;gt;</span>
+</span><span class='line'>    <span class="ni">&amp;lt;</span>EditText
+</span><span class='line'>        android:layout_width=&quot;match_parent&quot;
+</span><span class='line'>        android:layout_height=&quot;wrap_content&quot;
+</span><span class='line'>        android:id=&quot;@+id/main_edit&quot;/<span class="ni">&amp;gt;</span>
+</span><span class='line'><span class="ni">&amp;lt;</span>/RelativeLayout<span class="ni">&amp;gt;</span>
+</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>OK,这样系统就可以保存EditText的状态啦</p>
+
+<p><strong><em>注意：</em></strong>
+必须设置id，系统才会帮我们保存控件的状态，否则不会有任何效果</p>
+
+<h4>系统保存Activity的过程</h4>
+
+<p>首先我们来看下Activity中的onSaveInstanceStat方法：</p>
+
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onSaveInstanceState</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">outState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">outState</span><span class="o">.</span><span class="na">putBundle</span><span class="o">(</span><span class="n">WINDOW_HIERARCHY_TAG</span><span class="o">,</span> <span class="n">mWindow</span><span class="o">.</span><span class="na">saveHierarchyState</span><span class="o">());</span>
+</span><span class='line'>    <span class="n">Parcelable</span> <span class="n">p</span> <span class="o">=</span> <span class="n">mFragments</span><span class="o">.</span><span class="na">saveAllState</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">outState</span><span class="o">.</span><span class="na">putParcelable</span><span class="o">(</span><span class="n">FRAGMENTS_TAG</span><span class="o">,</span> <span class="n">p</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">getApplication</span><span class="o">().</span><span class="na">dispatchActivitySaveInstanceState</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">outState</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>其中方法中的第一句，调用了Window中的saveHierarchyState方法，我们知道Window是一个抽象类，那我们来看下Window的子类PhoneWindow中的saveHierarchyState的方法：</p>
+
+<pre><code class="java">    public Bundle saveHierarchyState() {
+        ...此处省略几句代码
+        SparseArray&lt;Parcelable&gt; states = new SparseArray&lt;Parcelable&gt;();
+        mContentParent.saveHierarchyState(states);
+        outState.putSparseParcelableArray(VIEWS_TAG, states);
+        ...此处省略几句代码
+    }
+</code></pre>
+
+<p>我们看重点，其它代码就不贴了，可以看到，调用mContentParent的saveHierarchyState,mContentView是一个ViewGroup，ViewGroup中没有这个方法，我看下父类View</p>
+
+<pre><code class="java">    public void saveHierarchyState(SparseArray&lt;Parcelable&gt; container) {
+        dispatchSaveInstanceState(container);
+    }
+</code></pre>
+
+<p>直接调用了dispatchSaveInstanceState方法，注意这时我们应该看ViewGroup中dispatchSaveInstanceState方法</p>
+
+<pre><code class="java">    protected void dispatchSaveInstanceState(SparseArray&lt;Parcelable&gt; container) {
+        super.dispatchSaveInstanceState(container);
+        final int count = mChildrenCount;
+        final View[] children = mChildren;
+        for (int i = 0; i &lt; count; i++) {
+            View c = children[i];
+            if ((c.mViewFlags &amp; PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED) {
+                c.dispatchSaveInstanceState(container);
+            }
+        }
+    }
+</code></pre>
+
+<p>大致做了两件事情，第一个调用本身的dispatchSaveInstanceState，遍历子View并调用子View的dispatchSaveInstanceState方法；</p>
+
+<pre><code class="java">    protected void dispatchSaveInstanceState(SparseArray&lt;Parcelable&gt; container) {
+        if (mID != NO_ID &amp;&amp; (mViewFlags &amp; SAVE_DISABLED_MASK) == 0) {
+            mPrivateFlags &amp;= ~PFLAG_SAVE_STATE_CALLED;
+            Parcelable state = onSaveInstanceState();
+            if ((mPrivateFlags &amp; PFLAG_SAVE_STATE_CALLED) == 0) {
+                throw new IllegalStateException(
+                        "Derived class did not call super.onSaveInstanceState()");
+            }
+            if (state != null) {
+                // Log.i("View", "Freezing #" + Integer.toHexString(mID)
+                // + ": " + state);
+                container.put(mID, state);
+            }
+        }
+    }
+</code></pre>
+
+<p>OK，重点来了，我们发现当id为空时，不会保存View的状态；整个保存状态分析就算完了。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Activity生命周期（二）]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)/"/>
+    <updated>2016-08-01T22:10:35+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/01/activitysheng-ming-zhou-qi-(er-)</id>
+    <content type="html"><![CDATA[<p>这篇文章主要介绍下，异常情况Activity的生命周期，在这里说明这里的异常情况不是我们程序崩溃，而是指当系统配置发生变化或者内存不足时的情况。</p>
+
+<!--more-->
+
+
+<h4>一、系统内存不足</h4>
+
+<p>先介绍一下Activity的优先级，如下:</p>
+
+<ul>
+<li>前台Activity，可以与用户进行交互，优先级最高</li>
+<li>可见但不能进行交互的Activity，例如弹框中的Activity</li>
+<li>后台Activity，不可见，优先级最低</li>
+</ul>
+
+
+<p>当系统的内存比较紧张时，会按照这个优先级来回收销毁Activity，在销毁Activity时，会调用onSaveInstance方法，保存当前Activity的状态</p>
+
+<h4>二、系统配置发生变化</h4>
+
+<p>当应用启动时，系统会根据系统的配置加载资源，当系统配置发生变化时，默认情况下，Activity会被销毁并重新创建，当然我们也可以阻止其销毁。当系统配置发生变化后，Activity会执行方法onPause、onStop、onDestory方法；</p>
+
+<h4>三、阻止系统配置变化引起的销毁重建</h4>
+
+<p>系统的配置有很多内容，当系统某项配置发生变化时我们不想Activity被销毁重建，我们可以在AndroidManifest.xml文件中设置Activity的configChanges属性，这样当此项配置发生变化时，就不会销毁重启了，而是调用Activity的onConfigurationChanged方法，举个🌰：</p>
+
+<pre><code>&lt;activity android:name=".DemoActivity" android:configChanges="orientation|screenSize|keyboardHidden"/&gt;
+</code></pre>
+
+<p>只要你不想某项配置的变化导致Activity的销毁重启，你就可以配置进去，多个可以使用"|&ldquo;来增加</p>
+
+<h4>三、数据的保存和恢复</h4>
+
+<p>如果我们想在Activity异常销毁前存储一些数据怎么搞呢；别担心，在异常销毁时，会调用Activity的onSaveInstanceState方法，在此方法中我们可以保存当前Activity的状态等，当在启动调用onCreate方法时，注意onCreate方法有个Bundle参数，这个参数带有在onSaveInstanceState方法中保存的数据（具体是不是一个对象就不知道了，O(∩_∩)O哈哈~），这是我们就可以恢复数据了，除此之外系统还会调用onRestoreInstanceState方法</p>
+
+<p><strong><em>注意：</em></strong>
+当不是异常销毁重启时，并不会调用这个方法；在onCreate中使用参数恢复数据时，注意判断参数非空的情况，不是异常重启的情况，参数是为空的。</p>
+
+<p><strong><em>调用时机：</em></strong>
+onSaveInstanceState是在onStop之前，具体是在onPause之前还是在onPause之后，这个不确定；
+onRestoreInstanceState方法是在onStart方法之后；</p>
+
+<p><strong><em>系统恢复数据：</em></strong>
+系统默认情况下，会帮我们保存Activity的状态，重启时恢复数据；在View中有和activity一样的方法onSaveInstanceState和onRestoreInstanceSate，具体保存那些数据可以看下其中的源码</p>
 ]]></content>
   </entry>
   
