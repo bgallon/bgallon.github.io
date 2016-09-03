@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 进阶 | 狂奔的蜗牛]]></title>
+  <link href="http://bgallon.github.io/blog/categories/jin-jie/atom.xml" rel="self"/>
+  <link href="http://bgallon.github.io/"/>
+  <updated>2016-09-03T12:05:00+08:00</updated>
+  <id>http://bgallon.github.io/</id>
+  <author>
+    <name><![CDATA[fishpan]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[FramtentPagerAdapter和FramgentStatePagerAdapter的区别]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/14/framtentpageradapterhe-framgentstatepageradapterde-qu-bie/"/>
+    <updated>2016-08-14T10:43:45+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/14/framtentpageradapterhe-framgentstatepageradapterde-qu-bie</id>
+    <content type="html"><![CDATA[<p>平时还真的很少关心FramgmentStatsPagerAdpater和FragmentPagerAdapter，以前只是两者有区别，但是不是很清楚到底有啥区别，今天就特别写了一个demo，来研究了下两者的区别</p>
+
+<!--more-->
+
+
+<h4>FragmentStateViewPager</h4>
+
+<p>很多资料都在说：这个适配器是实现多个fragment界面的滑动时非常有效，当Fragment对用户不可见时，整个fragment会被销毁，只会保存fragment的状态，更适合当fragment比较多的时候使用，而且消耗的资源更少:我写了段代码在Fragment的onCreate，onCreateView，onDestory,onDestoryView方法中打印日志，观察它的生命周期：
+我进入activity一直滑动到第三个Fragment为止，日志如下</p>
+
+<p><img src="http://i2.buimg.com/567571/235e5452e84d1730.jpg" alt="" /></p>
+
+<p>通过日志我们可以发现：</p>
+
+<ul>
+<li>当进入Activity时，会创建两个Fragment</li>
+<li>向右滑一下到1，创建第三个fragment</li>
+<li>再向右滑一下到2，这个时候不仅仅都创建了一个fragment，而且还销毁了第一个fragment</li>
+<li>再向右滑一下到3，这个时候同样，创建一个销毁一个</li>
+</ul>
+
+
+<p>可见，默认情况下没有设置viewPager的offscreenPageLimit属性时，当前fragment的保留总数最多是三个，及当前选中的fragment和选中左右两个fragment（可能没有），其它的fragment就会被销毁，并且还会保留销毁的fragment的状态，待重建时进行恢复（onSaveInstanceState方法），所以我觉得上边说的当fragment不可见时就会被销毁时错误的，严格的来讲应该是在缓存fragment之外的fragment会被销毁，<strong><em>并不是不可见就会被销毁</em></strong></p>
+
+<h4>FragmentViewPager</h4>
+
+<p>这个是ViewPager+Fragment常用的适配器，我们经常会使用，虽然常见我为了弄清楚有啥区别，同样做了一个实验，在生命周期打印日志，操作步骤和上边的FragmentStateViewPager一致，日志如下:</p>
+
+<p><img src="http://i1.buimg.com/567571/3828d9ebb9dc03f8.jpg" alt="" /></p>
+
+<p>从日志中我们可以发现，基本上和FragmentStateViewPager类似，但是其中缺少fragment销毁的操作，这就是他们的区别，fragmentStatePagerAdapter会把缓存之外的fragment销毁，而FragmentViewPager则不会，还会进行保留。</p>
+
+<h4>总结</h4>
+
+<p>相比之下，FragmentViewPager会更加流畅，而FragmentStateViewPager会更节省资源，对于fragment比较多的情况下我们可以使用FragmentStateViewPager，较少时使用FragmentViewPager更为妥当一些。</p>
+]]></content>
+  </entry>
+  
+</feed>

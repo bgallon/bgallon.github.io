@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://bgallon.github.io/blog/2016/08/14/ipcji-zhi-binder/</loc>
+<lastmod>2016-08-14T10:43:45+08:00</lastmod>
+</url>
+<url>
+<loc>http://bgallon.github.io/blog/2016/08/14/framtentpageradapterhe-framgentstatepageradapterde-qu-bie/</loc>
+<lastmod>2016-08-14T10:43:45+08:00</lastmod>
+</url>
+<url>
 <loc>http://bgallon.github.io/blog/2016/08/13/ipcji-zhi-duo-jin-cheng/</loc>
 <lastmod>2016-08-13T15:03:24+08:00</lastmod>
 </url>
@@ -44,5 +52,17 @@
 </url>
 <url>
 <loc>http://bgallon.github.io/blog/categories/duo-jin-cheng/</loc>
+</url>
+<url>
+<loc>http://bgallon.github.io/blog/categories/adapter/</loc>
+</url>
+<url>
+<loc>http://bgallon.github.io/blog/categories/jin-jie/</loc>
+</url>
+<url>
+<loc>http://bgallon.github.io/blog/categories/binder/</loc>
+</url>
+<url>
+<loc>http://bgallon.github.io/blog/categories/ji-chu/</loc>
 </url>
 </urlset>

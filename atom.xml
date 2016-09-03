@@ -4,7 +4,7 @@
   <title><![CDATA[狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-08-13T15:46:15+08:00</updated>
+  <updated>2016-09-03T12:05:00+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -12,6 +12,203 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[IPC机制-Binder]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/14/ipcji-zhi-binder/"/>
+    <updated>2016-08-14T10:43:45+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/14/ipcji-zhi-binder</id>
+    <content type="html"><![CDATA[<p>Binder是进程间通讯的一种方式，Android开发中，Binder主要用于Service中，其中普通的service不涉及设计进程间通讯，我这里看下AIDL方式，看下整个的调用过程</p>
+
+<!--more-->
+
+
+<p>首先我们先创建aidl文件IDemoManager.aidl,<strong><em>注意</em></strong>在Android studio中使用aidl,需要单独放在一个文件夹下，名称为aidl,和java同目录，如图</p>
+
+<p><img src="http://i1.piimg.com/567571/e946c4c0e24e3645.jpg" alt="" /></p>
+
+<p>内容如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">xxx</span><span class="o">.</span><span class="na">xxx</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'><span class="kd">interface</span> <span class="nc">IDemoManager</span> <span class="o">{</span>
+</span><span class='line'>  <span class="kt">void</span> <span class="nf">add</span><span class="o">(</span><span class="kt">int</span> <span class="n">a</span><span class="o">,</span> <span class="kt">int</span> <span class="n">b</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然后进行编译，如下图</p>
+
+<p><img src="http://i1.piimg.com/567571/38daf5235fd2f2e9.jpg" alt="" /></p>
+
+<p>可以在build中发现自动生成的代码，这就是aidl要做的事情，工具根据我们写的aidl文件，编程成代码，当然你也可以不写aidl文件，自己写代码</p>
+
+<p><img src="http://i1.piimg.com/567571/2896af883b845c00.jpg" alt="" /></p>
+
+<p>下面我就来研究一下为我们生成的代码，这个才是最关键</p>
+
+<hr />
+
+<pre><code>public interface IDemoManager extends android.os.IInterface {
+/**
+ * Local-side IPC implementation stub class.
+ */
+public static abstract class Stub extends android.os.Binder implements com.fishpan.appliactions.IDemoManager {
+    private static final java.lang.String DESCRIPTOR = "com.fishpan.appliactions.IDemoManager";
+
+    /**
+     * Construct the stub at attach it to the interface.
+     */
+    public Stub() {
+        this.attachInterface(this, DESCRIPTOR);
+    }
+
+    /**
+     * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,
+     * generating a proxy if needed.
+     */
+    public static com.fishpan.appliactions.IDemoManager asInterface(android.os.IBinder obj) {
+        if ((obj == null)) {
+            return null;
+        }
+        android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+        if (((iin != null) &amp;&amp; (iin instanceof com.fishpan.appliactions.IDemoManager))) {
+            return ((com.fishpan.appliactions.IDemoManager) iin);
+        }
+        return new com.fishpan.appliactions.IDemoManager.Stub.Proxy(obj);
+    }
+
+    @Override
+    public android.os.IBinder asBinder() {
+        return this;
+    }
+
+    @Override
+    public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
+        switch (code) {
+            case INTERFACE_TRANSACTION: {
+                reply.writeString(DESCRIPTOR);
+                return true;
+            }
+            case TRANSACTION_add: {
+                data.enforceInterface(DESCRIPTOR);
+                int _arg0;
+                _arg0 = data.readInt();
+                int _arg1;
+                _arg1 = data.readInt();
+                int _result = this.add(_arg0, _arg1);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+        }
+        return super.onTransact(code, data, reply, flags);
+    }
+
+    private static class Proxy implements com.fishpan.appliactions.IDemoManager {
+        private android.os.IBinder mRemote;
+
+        Proxy(android.os.IBinder remote) {
+            mRemote = remote;
+        }
+
+        @Override
+        public android.os.IBinder asBinder() {
+            return mRemote;
+        }
+
+        public java.lang.String getInterfaceDescriptor() {
+            return DESCRIPTOR;
+        }
+
+        @Override
+        public int add(int a, int b) throws android.os.RemoteException {
+            android.os.Parcel _data = android.os.Parcel.obtain();
+            android.os.Parcel _reply = android.os.Parcel.obtain();
+            int _result;
+            try {
+                _data.writeInterfaceToken(DESCRIPTOR);
+                _data.writeInt(a);
+                _data.writeInt(b);
+                mRemote.transact(Stub.TRANSACTION_add, _data, _reply, 0);
+                _reply.readException();
+                _result = _reply.readInt();
+            } finally {
+                _reply.recycle();
+                _data.recycle();
+            }
+            return _result;
+        }
+    }
+
+    static final int TRANSACTION_add = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
+}
+
+public int add(int a, int b) throws android.os.RemoteException;
+</code></pre>
+
+<hr />
+
+<p>自动生成的代码有点乱，我们可以把它给格式化一下，可以看到编译工具为我们生成了一个接口IDemoManager,继承于IInterface，啥事也没干；一个add方法，一个静态的内部抽象类，继承与Binder，实现IDemoManager本身，我们来详细看看他的每一部分</p>
+
+<ul>
+<li>DESCRIPTOR Binder的唯一标识</li>
+<li>asInterface 用于将服务端的Binder对象转换成客户端所需要的aidl接口类型的对象，注意我们可以根据代码看出，他有两个地方有return，第一个其实是当客户端和服务端属于同一个进程时，返回自己本身，第二个是返回了一个代理对象</li>
+<li>asBinder 用于返回当前Binder对象</li>
+<li>onTransact 这个方法运行在<strong><em>服务端</em></strong>，当客户端发起跨进程请求时，远程请求会通过系统底层封装后交有此方法。服务端通过code，确定客户端要执行什么方法，从data获取参数，然后指定目标方法；执行完毕后就像reply中写入返回值(如果有返回值)</li>
+<li>Proxy#add 此方法运行在客户端，当客户端调用此方法时，会输入型参数write进<em>data，输出型参数write进</em>reply,紧接着会调用transact方法来发起RPC请求，当前线程挂起；服务端的onTransact方法被调用，调用结束后，返回数据会在_reply中。</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[FramtentPagerAdapter和FramgentStatePagerAdapter的区别]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/14/framtentpageradapterhe-framgentstatepageradapterde-qu-bie/"/>
+    <updated>2016-08-14T10:43:45+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/14/framtentpageradapterhe-framgentstatepageradapterde-qu-bie</id>
+    <content type="html"><![CDATA[<p>平时还真的很少关心FramgmentStatsPagerAdpater和FragmentPagerAdapter，以前只是两者有区别，但是不是很清楚到底有啥区别，今天就特别写了一个demo，来研究了下两者的区别</p>
+
+<!--more-->
+
+
+<h4>FragmentStateViewPager</h4>
+
+<p>很多资料都在说：这个适配器是实现多个fragment界面的滑动时非常有效，当Fragment对用户不可见时，整个fragment会被销毁，只会保存fragment的状态，更适合当fragment比较多的时候使用，而且消耗的资源更少:我写了段代码在Fragment的onCreate，onCreateView，onDestory,onDestoryView方法中打印日志，观察它的生命周期：
+我进入activity一直滑动到第三个Fragment为止，日志如下</p>
+
+<p><img src="http://i2.buimg.com/567571/235e5452e84d1730.jpg" alt="" /></p>
+
+<p>通过日志我们可以发现：</p>
+
+<ul>
+<li>当进入Activity时，会创建两个Fragment</li>
+<li>向右滑一下到1，创建第三个fragment</li>
+<li>再向右滑一下到2，这个时候不仅仅都创建了一个fragment，而且还销毁了第一个fragment</li>
+<li>再向右滑一下到3，这个时候同样，创建一个销毁一个</li>
+</ul>
+
+
+<p>可见，默认情况下没有设置viewPager的offscreenPageLimit属性时，当前fragment的保留总数最多是三个，及当前选中的fragment和选中左右两个fragment（可能没有），其它的fragment就会被销毁，并且还会保留销毁的fragment的状态，待重建时进行恢复（onSaveInstanceState方法），所以我觉得上边说的当fragment不可见时就会被销毁时错误的，严格的来讲应该是在缓存fragment之外的fragment会被销毁，<strong><em>并不是不可见就会被销毁</em></strong></p>
+
+<h4>FragmentViewPager</h4>
+
+<p>这个是ViewPager+Fragment常用的适配器，我们经常会使用，虽然常见我为了弄清楚有啥区别，同样做了一个实验，在生命周期打印日志，操作步骤和上边的FragmentStateViewPager一致，日志如下:</p>
+
+<p><img src="http://i1.buimg.com/567571/3828d9ebb9dc03f8.jpg" alt="" /></p>
+
+<p>从日志中我们可以发现，基本上和FragmentStateViewPager类似，但是其中缺少fragment销毁的操作，这就是他们的区别，fragmentStatePagerAdapter会把缓存之外的fragment销毁，而FragmentViewPager则不会，还会进行保留。</p>
+
+<h4>总结</h4>
+
+<p>相比之下，FragmentViewPager会更加流畅，而FragmentStateViewPager会更节省资源，对于fragment比较多的情况下我们可以使用FragmentStateViewPager，较少时使用FragmentViewPager更为妥当一些。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[IPC机制-多进程]]></title>
@@ -251,15 +448,15 @@
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='xml'><span class='line'>  <span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;RelativeLayout</span> <span class="na">xmlns:android=</span><span class="s">&quot;http://schemas.android.com/apk/res/android&quot;</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+</span><span class='line'><span class="nt">&lt;RelativeLayout</span> <span class="na">xmlns:android=</span><span class="s">&quot;http://schemas.android.com/apk/res/android&quot;</span>
+</span><span class='line'>  <span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span>
+</span><span class='line'>    <span class="na">android:layout_height=</span><span class="s">&quot;match_parent&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;EditText</span>
 </span><span class='line'>      <span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span>
-</span><span class='line'>      <span class="na">android:layout_height=</span><span class="s">&quot;match_parent&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;EditText</span>
-</span><span class='line'>          <span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span>
-</span><span class='line'>          <span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
-</span><span class='line'>          <span class="na">android:id=</span><span class="s">&quot;@+id/main_edit&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/RelativeLayout&gt;</span>
+</span><span class='line'>        <span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:id=</span><span class="s">&quot;@+id/main_edit&quot;</span><span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;/RelativeLayout&gt;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -280,14 +477,14 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'> <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onSaveInstanceState</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">outState</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="n">outState</span><span class="o">.</span><span class="na">putBundle</span><span class="o">(</span><span class="n">WINDOW_HIERARCHY_TAG</span><span class="o">,</span> <span class="n">mWindow</span><span class="o">.</span><span class="na">saveHierarchyState</span><span class="o">());</span>
-</span><span class='line'>        <span class="n">Parcelable</span> <span class="n">p</span> <span class="o">=</span> <span class="n">mFragments</span><span class="o">.</span><span class="na">saveAllState</span><span class="o">();</span>
-</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>            <span class="n">outState</span><span class="o">.</span><span class="na">putParcelable</span><span class="o">(</span><span class="n">FRAGMENTS_TAG</span><span class="o">,</span> <span class="n">p</span><span class="o">);</span>
-</span><span class='line'>        <span class="o">}</span>
-</span><span class='line'>        <span class="n">getApplication</span><span class="o">().</span><span class="na">dispatchActivitySaveInstanceState</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">outState</span><span class="o">);</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onSaveInstanceState</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">outState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">outState</span><span class="o">.</span><span class="na">putBundle</span><span class="o">(</span><span class="n">WINDOW_HIERARCHY_TAG</span><span class="o">,</span> <span class="n">mWindow</span><span class="o">.</span><span class="na">saveHierarchyState</span><span class="o">());</span>
+</span><span class='line'>    <span class="n">Parcelable</span> <span class="n">p</span> <span class="o">=</span> <span class="n">mFragments</span><span class="o">.</span><span class="na">saveAllState</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">outState</span><span class="o">.</span><span class="na">putParcelable</span><span class="o">(</span><span class="n">FRAGMENTS_TAG</span><span class="o">,</span> <span class="n">p</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">getApplication</span><span class="o">().</span><span class="na">dispatchActivitySaveInstanceState</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">outState</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -303,9 +500,9 @@
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="n">Bundle</span> <span class="nf">saveHierarchyState</span><span class="o">()</span> <span class="o">{</span>
 </span><span class='line'>  <span class="o">...</span><span class="na">此处省略几句代码</span>
 </span><span class='line'>  <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Parcelable</span><span class="o">&gt;</span> <span class="n">states</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Parcelable</span><span class="o">&gt;();</span>
-</span><span class='line'>  <span class="n">mContentParent</span><span class="o">.</span><span class="na">saveHierarchyState</span><span class="o">(</span><span class="n">states</span><span class="o">);</span>
-</span><span class='line'>  <span class="n">outState</span><span class="o">.</span><span class="na">putSparseParcelableArray</span><span class="o">(</span><span class="n">VIEWS_TAG</span><span class="o">,</span> <span class="n">states</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">...</span><span class="na">此处省略几句代码</span>
+</span><span class='line'>    <span class="n">mContentParent</span><span class="o">.</span><span class="na">saveHierarchyState</span><span class="o">(</span><span class="n">states</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">outState</span><span class="o">.</span><span class="na">putSparseParcelableArray</span><span class="o">(</span><span class="n">VIEWS_TAG</span><span class="o">,</span> <span class="n">states</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">...</span><span class="na">此处省略几句代码</span>
 </span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
@@ -418,8 +615,11 @@
 
 <p>系统的配置有很多内容，当系统某项配置发生变化时我们不想Activity被销毁重建，我们可以在AndroidManifest.xml文件中设置Activity的configChanges属性，这样当此项配置发生变化时，就不会销毁重启了，而是调用Activity的onConfigurationChanged方法，举个🌰：</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;activity android:name=".DemoActivity" android:configChanges="orientation|screenSize|keyboardHidden"/&gt;</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">&quot;.DemoActivity&quot;</span> <span class="na">android:configChanges=</span><span class="s">&quot;orientation|screenSize|</span>
+</span><span class='line'><span class="s">keyboardHidden&quot;</span><span class="nt">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>只要你不想某项配置的变化导致Activity的销毁重启，你就可以配置进去，多个可以使用"|&ldquo;来增加</p>

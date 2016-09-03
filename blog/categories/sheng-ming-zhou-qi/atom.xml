@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 生命周期 | 狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/blog/categories/sheng-ming-zhou-qi/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-08-13T15:46:15+08:00</updated>
+  <updated>2016-09-03T12:05:00+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -38,19 +38,17 @@
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
-<span class='line-number'>14</span>
 </pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;/p&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>RelativeLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
-</span><span class='line'>    android:layout_width=&quot;match_parent&quot;
-</span><span class='line'>    android:layout_height=&quot;match_parent&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>    <span class="ni">&amp;lt;</span>EditText
-</span><span class='line'>        android:layout_width=&quot;match_parent&quot;
-</span><span class='line'>        android:layout_height=&quot;wrap_content&quot;
-</span><span class='line'>        android:id=&quot;@+id/main_edit&quot;/<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>/RelativeLayout<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'><span class="nt">&lt;p&gt;</span><span class="ni">&amp;lt;</span>?xml version=<span class="ni">&amp;ldquo;</span>1.0<span class="ni">&amp;rdquo;</span> encoding=<span class="ni">&amp;ldquo;</span>utf-8<span class="ni">&amp;rdquo;</span>?&gt;
+</span><span class='line'><span class="nt">&lt;RelativeLayout</span> <span class="na">xmlns:android=</span><span class="s">&quot;http://schemas.android.com/apk/res/android&quot;</span>
+</span><span class='line'>    <span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span>
+</span><span class='line'>    <span class="na">android:layout_height=</span><span class="s">&quot;match_parent&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;EditText</span>
+</span><span class='line'>        <span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:id=</span><span class="s">&quot;@+id/main_edit&quot;</span><span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;/RelativeLayout&gt;&lt;/p&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="nt">&lt;p&gt;</span>
 </span></code></pre></td></tr></table></div></figure></p>
@@ -74,12 +72,9 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onSaveInstanceState</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">outState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onSaveInstanceState</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">outState</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>    <span class="n">outState</span><span class="o">.</span><span class="na">putBundle</span><span class="o">(</span><span class="n">WINDOW_HIERARCHY_TAG</span><span class="o">,</span> <span class="n">mWindow</span><span class="o">.</span><span class="na">saveHierarchyState</span><span class="o">());</span>
 </span><span class='line'>    <span class="n">Parcelable</span> <span class="n">p</span> <span class="o">=</span> <span class="n">mFragments</span><span class="o">.</span><span class="na">saveAllState</span><span class="o">();</span>
 </span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
@@ -87,20 +82,17 @@
 </span><span class='line'>    <span class="o">}</span>
 </span><span class='line'>    <span class="n">getApplication</span><span class="o">().</span><span class="na">dispatchActivitySaveInstanceState</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">outState</span><span class="o">);</span>
 </span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
 <p>其中方法中的第一句，调用了Window中的saveHierarchyState方法，我们知道Window是一个抽象类，那我们来看下Window的子类PhoneWindow中的saveHierarchyState的方法：</p>
 
-<pre><code class="java">    public Bundle saveHierarchyState() {
-        ...此处省略几句代码
-        SparseArray&lt;Parcelable&gt; states = new SparseArray&lt;Parcelable&gt;();
-        mContentParent.saveHierarchyState(states);
-        outState.putSparseParcelableArray(VIEWS_TAG, states);
-        ...此处省略几句代码
-    }
+<pre><code class="java">public Bundle saveHierarchyState() {
+    ...此处省略几句代码
+    SparseArray&lt;Parcelable&gt; states = new SparseArray&lt;Parcelable&gt;();
+    mContentParent.saveHierarchyState(states);
+    outState.putSparseParcelableArray(VIEWS_TAG, states);
+    ...此处省略几句代码
+}
 </code></pre>
 
 <p>我们看重点，其它代码就不贴了，可以看到，调用mContentParent的saveHierarchyState,mContentView是一个ViewGroup，ViewGroup中没有这个方法，我看下父类View</p>
@@ -179,7 +171,9 @@
 
 <p>系统的配置有很多内容，当系统某项配置发生变化时我们不想Activity被销毁重建，我们可以在AndroidManifest.xml文件中设置Activity的configChanges属性，这样当此项配置发生变化时，就不会销毁重启了，而是调用Activity的onConfigurationChanged方法，举个🌰：</p>
 
-<pre><code>&lt;activity android:name=".DemoActivity" android:configChanges="orientation|screenSize|keyboardHidden"/&gt;
+<pre><code class="xml">
+&lt;activity android:name=".DemoActivity" android:configChanges="orientation|screenSize|
+keyboardHidden"/&gt;
 </code></pre>
 
 <p>只要你不想某项配置的变化导致Activity的销毁重启，你就可以配置进去，多个可以使用"|&ldquo;来增加</p>

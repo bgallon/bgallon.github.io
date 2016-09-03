@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 基础 | 狂奔的蜗牛]]></title>
+  <link href="http://bgallon.github.io/blog/categories/ji-chu/atom.xml" rel="self"/>
+  <link href="http://bgallon.github.io/"/>
+  <updated>2016-09-03T12:05:00+08:00</updated>
+  <id>http://bgallon.github.io/</id>
+  <author>
+    <name><![CDATA[fishpan]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[IPC机制-Binder]]></title>
+    <link href="http://bgallon.github.io/blog/2016/08/14/ipcji-zhi-binder/"/>
+    <updated>2016-08-14T10:43:45+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/08/14/ipcji-zhi-binder</id>
+    <content type="html"><![CDATA[<p>Binder是进程间通讯的一种方式，Android开发中，Binder主要用于Service中，其中普通的service不涉及设计进程间通讯，我这里看下AIDL方式，看下整个的调用过程</p>
+
+<!--more-->
+
+
+<p>首先我们先创建aidl文件IDemoManager.aidl,<strong><em>注意</em></strong>在Android studio中使用aidl,需要单独放在一个文件夹下，名称为aidl,和java同目录，如图</p>
+
+<p><img src="http://i1.piimg.com/567571/e946c4c0e24e3645.jpg" alt="" /></p>
+
+<p>内容如下：</p>
+
+<pre><code class="java">
+package com.xxx.xxx;
+
+interface IDemoManager {
+    void add(int a, int b);
+}
+</code></pre>
+
+<p>然后进行编译，如下图</p>
+
+<p><img src="http://i1.piimg.com/567571/38daf5235fd2f2e9.jpg" alt="" /></p>
+
+<p>可以在build中发现自动生成的代码，这就是aidl要做的事情，工具根据我们写的aidl文件，编程成代码，当然你也可以不写aidl文件，自己写代码</p>
+
+<p><img src="http://i1.piimg.com/567571/2896af883b845c00.jpg" alt="" /></p>
+
+<p>下面我就来研究一下为我们生成的代码，这个才是最关键</p>
+
+<hr />
+
+<pre><code>public interface IDemoManager extends android.os.IInterface {
+/**
+ * Local-side IPC implementation stub class.
+ */
+public static abstract class Stub extends android.os.Binder implements com.fishpan.appliactions.IDemoManager {
+    private static final java.lang.String DESCRIPTOR = "com.fishpan.appliactions.IDemoManager";
+
+    /**
+     * Construct the stub at attach it to the interface.
+     */
+    public Stub() {
+        this.attachInterface(this, DESCRIPTOR);
+    }
+
+    /**
+     * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,
+     * generating a proxy if needed.
+     */
+    public static com.fishpan.appliactions.IDemoManager asInterface(android.os.IBinder obj) {
+        if ((obj == null)) {
+            return null;
+        }
+        android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+        if (((iin != null) &amp;&amp; (iin instanceof com.fishpan.appliactions.IDemoManager))) {
+            return ((com.fishpan.appliactions.IDemoManager) iin);
+        }
+        return new com.fishpan.appliactions.IDemoManager.Stub.Proxy(obj);
+    }
+
+    @Override
+    public android.os.IBinder asBinder() {
+        return this;
+    }
+
+    @Override
+    public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
+        switch (code) {
+            case INTERFACE_TRANSACTION: {
+                reply.writeString(DESCRIPTOR);
+                return true;
+            }
+            case TRANSACTION_add: {
+                data.enforceInterface(DESCRIPTOR);
+                int _arg0;
+                _arg0 = data.readInt();
+                int _arg1;
+                _arg1 = data.readInt();
+                int _result = this.add(_arg0, _arg1);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+        }
+        return super.onTransact(code, data, reply, flags);
+    }
+
+    private static class Proxy implements com.fishpan.appliactions.IDemoManager {
+        private android.os.IBinder mRemote;
+
+        Proxy(android.os.IBinder remote) {
+            mRemote = remote;
+        }
+
+        @Override
+        public android.os.IBinder asBinder() {
+            return mRemote;
+        }
+
+        public java.lang.String getInterfaceDescriptor() {
+            return DESCRIPTOR;
+        }
+
+        @Override
+        public int add(int a, int b) throws android.os.RemoteException {
+            android.os.Parcel _data = android.os.Parcel.obtain();
+            android.os.Parcel _reply = android.os.Parcel.obtain();
+            int _result;
+            try {
+                _data.writeInterfaceToken(DESCRIPTOR);
+                _data.writeInt(a);
+                _data.writeInt(b);
+                mRemote.transact(Stub.TRANSACTION_add, _data, _reply, 0);
+                _reply.readException();
+                _result = _reply.readInt();
+            } finally {
+                _reply.recycle();
+                _data.recycle();
+            }
+            return _result;
+        }
+    }
+
+    static final int TRANSACTION_add = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
+}
+
+public int add(int a, int b) throws android.os.RemoteException;
+</code></pre>
+
+<hr />
+
+<p>自动生成的代码有点乱，我们可以把它给格式化一下，可以看到编译工具为我们生成了一个接口IDemoManager,继承于IInterface，啥事也没干；一个add方法，一个静态的内部抽象类，继承与Binder，实现IDemoManager本身，我们来详细看看他的每一部分</p>
+
+<ul>
+<li>DESCRIPTOR Binder的唯一标识</li>
+<li>asInterface 用于将服务端的Binder对象转换成客户端所需要的aidl接口类型的对象，注意我们可以根据代码看出，他有两个地方有return，第一个其实是当客户端和服务端属于同一个进程时，返回自己本身，第二个是返回了一个代理对象</li>
+<li>asBinder 用于返回当前Binder对象</li>
+<li>onTransact 这个方法运行在<strong><em>服务端</em></strong>，当客户端发起跨进程请求时，远程请求会通过系统底层封装后交有此方法。服务端通过code，确定客户端要执行什么方法，从data获取参数，然后指定目标方法；执行完毕后就像reply中写入返回值(如果有返回值)</li>
+<li>Proxy#add 此方法运行在客户端，当客户端调用此方法时，会输入型参数write进<em>data，输出型参数write进</em>reply,紧接着会调用transact方法来发起RPC请求，当前线程挂起；服务端的onTransact方法被调用，调用结束后，返回数据会在_reply中。</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
