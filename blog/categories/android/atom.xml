@@ -4,7 +4,7 @@
   <title><![CDATA[Category: android | 狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/blog/categories/android/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-03T12:05:00+08:00</updated>
+  <updated>2016-09-05T23:06:00+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -12,6 +12,197 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[类加载器基础]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/04/lei-jia-zai-qi-ji-chu/"/>
+    <updated>2016-09-04T15:24:23+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/04/lei-jia-zai-qi-ji-chu</id>
+    <content type="html"><![CDATA[<p>Java中有一个加载器是ClassLoader，但是Java中的加载器不能直接应用在Android上边；对于Android上的应用，虽然都是用Java开发，并且使用了标准的Java编译器编译出来的Class文件，但是最终的Apk文件却包含的是dex类型的文件，dex文件是将所需的所有Class文件重新打包；由于dex文件是一种优化过的class文件，所以并不能直接用ClassLoader加载, <a href="https://medium.com/@HeadFirstDroid/how-apps-are-built-and-run-on-the-android-runtime-art-c027f73edb09#.ul2b6736x">class到apk的过程</a>，使用ClassLoader会出现什么问题可以看下这篇文章<a href="http://blog.csdn.net/jiangwei0910410003/article/details/17679823"> Android中的动态加载机制</a>,为了在Android中能够动态加载，Android提供了两个DexClassLoader及PathClassLoader。</p>
+
+<!--more-->
+
+
+<h4>插件类</h4>
+
+<pre><code class="java 插件类">public class Plugin {
+    public String print(){
+        Log.d("fishpan_log", "-----print-----");
+        return "OK";
+    }
+}
+</code></pre>
+
+<p>接下来我们需要把插件类打包，并插件apk放到sdcard上。</p>
+
+<h4>DexClassLoader</h4>
+
+<pre><code class="java">private void dexClassLoader(){
+        String sourceDir = "/sdcard/plugin-debug.apk";
+        DexClassLoader clzzLoader = new DexClassLoader(sourceDir, getApplicationInfo().dataDir, null, getClassLoader());
+        try {
+            Class&lt;?&gt; clazz = clzzLoader.loadClass("com.fishpan.plugin.Plugin");
+            Object object = clazz.newInstance();
+            Method method = clazz.getMethod("print");
+            Object result = method.invoke(object);
+            Toast.makeText(this, "result:" + result, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+</code></pre>
+
+<p>因为在宿主apk中，是没有Plugin类，所以我们在宿主程序中不能直接使用，只能使用反射来进行。DexClassLoader构造参数有四个参数，第一个是dex或者apk文件地址；第二个是解压后dex文件的地址，这里我们使用宿主的dataDir;第三个是so文件路径，可以为空；第四个是父类加载器</p>
+
+<h4>PathClassLoader</h4>
+
+<pre><code class="java">private void pathClassLoader(){
+        String sourceDir = "";
+        try {
+            PackageInfo packInfo = getPackageManager().getPackageInfo("com.fishpan.plugin", 0);
+            sourceDir = packInfo.applicationInfo.sourceDir;
+//            sourceDir = "/sdcard/plugin-debug.apk";   在安装的情况下,使用这种地址也是可以成功找到Class的
+            PathClassLoader clzzLoader = new PathClassLoader(sourceDir, getClassLoader());
+            Class&lt;?&gt; clazz = clzzLoader.loadClass("com.fishpan.plugin.Plugin");
+            Object object = clazz.newInstance();
+            Method method = clazz.getMethod("print");
+            Object result = method.invoke(object);
+            Toast.makeText(this, "result:" + result, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+</code></pre>
+
+<p>PathClassLoader和DexClassLoader的区别就是据说只能加载已经安装在Android系统内APK文件，但是我也做了实验，安装的情况下，apk文件的路径自己指定也能加载到Class，在实际使用过程中，还是使用DexClassLoader比较靠谱，</p>
+
+<p>运行情况如下</p>
+
+<p><img src="http://i2.buimg.com/567571/7d89c35fce163706.gif" alt="" /></p>
+
+<p>另外这里使用插件类，都是使用反射完成的，我们可以定义一个公共的接口，这样在插件apk和宿主apk里放入接口，这样就不用使用反射了，用起来就比较简单和容易了。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[代理模式]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi/"/>
+    <updated>2016-09-03T14:59:28+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi</id>
+    <content type="html"><![CDATA[<p>所谓代理，就是一个人或者机构代表另一个人或者机构采取行动。在一些情况下，一个客户不想或者不能够直接引用一个对象，而代理对象可以在客户端和目标对象之间起到中介的作用。</p>
+
+<!--more-->
+
+
+<p><img src="http://i1.piimg.com/567571/a74ac82fd02cddc9.gif" alt="" /></p>
+
+<p>Subject:委托对象和代理对象的共同接口</p>
+
+<p>RealSubject:委托对象</p>
+
+<p>Proxy:代理对象</p>
+
+<h4>代理实现分类：</h4>
+
+<ul>
+<li><p>静态代理</p>
+
+<p>  代理类是在编译时就实现好了。</p></li>
+<li><p>动态代理</p>
+
+<p>  动态代理类的源码是在程序运行期间由JVM根据反射等机制动态的生成，所以不存在代理类的字节码文件。</p></li>
+</ul>
+
+
+<h4>静态代理</h4>
+
+<pre><code class="java 公共接口">public interface Subject {
+    public void request();
+}
+</code></pre>
+
+<pre><code class="java 委托对象">
+public class RealSubject implements Subject {
+
+    @Override
+    public void request() {
+        System.out.println("request");
+    }
+
+}
+</code></pre>
+
+<pre><code class="java 代理对象">public class Proxy implements Subject{
+    private Subject mSubject;
+
+    public Proxy(Subject subject){
+        mSubject = subject;
+    }
+
+    @Override
+    public void request() {
+        System.out.println("start request");
+        if(null != mSubject){
+            mSubject.request();
+        }
+        System.out.println("end request");
+    }
+
+}
+</code></pre>
+
+<p>静态代理类优缺点</p>
+
+<p>优点：业务类只需要关注业务逻辑本身，保证了业务类的重用性。这是代理的共有优点。</p>
+
+<p>缺点：</p>
+
+<ul>
+<li>代理对象的一个接口只服务于一种类型的对象，如果要代理的方法很多，势必要为每一种方法都进行代理，静态代理在程序规模稍大时就无法胜任了。</li>
+<li>如果接口增加一个方法，除了所有实现类需要实现这个方法外，所有代理类也需要实现此方法。增加了代码维护的复杂度。</li>
+</ul>
+
+
+<h4>动态代理</h4>
+
+<p>实现动态代理模式，首先我们需要创建一个调度器，只需实现InvocationHandler接口即可</p>
+
+<pre><code class="java 调度器">public class SubjectHandler implements InvocationHandler{
+    private Object delegate;
+
+    public SubjectHandler(Object delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args)
+            throws Throwable {
+        System.out.println("start invoke");
+        Object result = method.invoke(delegate, args);
+        System.out.println("end invoke");
+        return result; 
+    }
+}
+</code></pre>
+
+<pre><code class="java">Subject delegate = new RealSubject();
+SubjectHandler handler = new SubjectHandler(delegate);
+Subject proxy = (Subject)java.lang.reflect.Proxy.newProxyInstance(  
+    delegate.getClass().getClassLoader(),   
+    delegate.getClass().getInterfaces(),   
+    handler);  
+proxy.request();
+</code></pre>
+
+<p>优点：
+动态代理与静态代理相比较，最大的好处是接口中声明的所有方法都被转移到调用处理器一个集中的方法中处理（InvocationHandler.invoke）。这样，在接口方法数量比较多的时候，我们可以进行灵活处理，而不需要像静态代理那样每一个方法进行中转。在本示例中看不出来，因为invoke方法体内嵌入了具体的外围业务（记录任务处理前后时间并计算时间差），实际中可以类似Spring AOP那样配置外围业务。</p>
+
+<p>缺点：
+无法摆脱仅支持 interface 代理的桎梏，因为它的设计注定了这个遗憾。回想一下那些动态生成的代理类的继承关系图，它们已经注定有一个共同的父类叫 Proxy。Java 的继承机制注定了这些动态代理类们无法实现对 class 的动态代理，原因是多继承在 Java 中本质上就行不通。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[IPC机制-Binder]]></title>
@@ -47,107 +238,105 @@ interface IDemoManager {
 
 <p>下面我就来研究一下为我们生成的代码，这个才是最关键</p>
 
-<hr />
-
-<pre><code>public interface IDemoManager extends android.os.IInterface {
-/**
- * Local-side IPC implementation stub class.
- */
-public static abstract class Stub extends android.os.Binder implements com.fishpan.appliactions.IDemoManager {
-    private static final java.lang.String DESCRIPTOR = "com.fishpan.appliactions.IDemoManager";
-
+<pre><code class="java">
+    public interface IDemoManager extends android.os.IInterface {
     /**
-     * Construct the stub at attach it to the interface.
+     * Local-side IPC implementation stub class.
      */
-    public Stub() {
-        this.attachInterface(this, DESCRIPTOR);
-    }
+    public static abstract class Stub extends android.os.Binder implements com.fishpan.appliactions.IDemoManager {
+        private static final java.lang.String DESCRIPTOR = "com.fishpan.appliactions.IDemoManager";
 
-    /**
-     * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,
-     * generating a proxy if needed.
-     */
-    public static com.fishpan.appliactions.IDemoManager asInterface(android.os.IBinder obj) {
-        if ((obj == null)) {
-            return null;
+        /**
+         * Construct the stub at attach it to the interface.
+         */
+        public Stub() {
+            this.attachInterface(this, DESCRIPTOR);
         }
-        android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
-        if (((iin != null) &amp;&amp; (iin instanceof com.fishpan.appliactions.IDemoManager))) {
-            return ((com.fishpan.appliactions.IDemoManager) iin);
-        }
-        return new com.fishpan.appliactions.IDemoManager.Stub.Proxy(obj);
-    }
 
-    @Override
-    public android.os.IBinder asBinder() {
-        return this;
-    }
-
-    @Override
-    public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
-        switch (code) {
-            case INTERFACE_TRANSACTION: {
-                reply.writeString(DESCRIPTOR);
-                return true;
+        /**
+         * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,
+         * generating a proxy if needed.
+         */
+        public static com.fishpan.appliactions.IDemoManager asInterface(android.os.IBinder obj) {
+            if ((obj == null)) {
+                return null;
             }
-            case TRANSACTION_add: {
-                data.enforceInterface(DESCRIPTOR);
-                int _arg0;
-                _arg0 = data.readInt();
-                int _arg1;
-                _arg1 = data.readInt();
-                int _result = this.add(_arg0, _arg1);
-                reply.writeNoException();
-                reply.writeInt(_result);
-                return true;
+            android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+            if (((iin != null) &amp;&amp; (iin instanceof com.fishpan.appliactions.IDemoManager))) {
+                return ((com.fishpan.appliactions.IDemoManager) iin);
             }
-        }
-        return super.onTransact(code, data, reply, flags);
-    }
-
-    private static class Proxy implements com.fishpan.appliactions.IDemoManager {
-        private android.os.IBinder mRemote;
-
-        Proxy(android.os.IBinder remote) {
-            mRemote = remote;
+            return new com.fishpan.appliactions.IDemoManager.Stub.Proxy(obj);
         }
 
         @Override
         public android.os.IBinder asBinder() {
-            return mRemote;
-        }
-
-        public java.lang.String getInterfaceDescriptor() {
-            return DESCRIPTOR;
+            return this;
         }
 
         @Override
-        public int add(int a, int b) throws android.os.RemoteException {
-            android.os.Parcel _data = android.os.Parcel.obtain();
-            android.os.Parcel _reply = android.os.Parcel.obtain();
-            int _result;
-            try {
-                _data.writeInterfaceToken(DESCRIPTOR);
-                _data.writeInt(a);
-                _data.writeInt(b);
-                mRemote.transact(Stub.TRANSACTION_add, _data, _reply, 0);
-                _reply.readException();
-                _result = _reply.readInt();
-            } finally {
-                _reply.recycle();
-                _data.recycle();
+        public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
+            switch (code) {
+                case INTERFACE_TRANSACTION: {
+                    reply.writeString(DESCRIPTOR);
+                    return true;
+                }
+                case TRANSACTION_add: {
+                    data.enforceInterface(DESCRIPTOR);
+                    int _arg0;
+                    _arg0 = data.readInt();
+                    int _arg1;
+                    _arg1 = data.readInt();
+                    int _result = this.add(_arg0, _arg1);
+                    reply.writeNoException();
+                    reply.writeInt(_result);
+                    return true;
+                }
             }
-            return _result;
+            return super.onTransact(code, data, reply, flags);
         }
+
+        private static class Proxy implements com.fishpan.appliactions.IDemoManager {
+            private android.os.IBinder mRemote;
+
+            Proxy(android.os.IBinder remote) {
+                mRemote = remote;
+            }
+
+            @Override
+            public android.os.IBinder asBinder() {
+                return mRemote;
+            }
+
+            public java.lang.String getInterfaceDescriptor() {
+                return DESCRIPTOR;
+            }
+
+            @Override
+            public int add(int a, int b) throws android.os.RemoteException {
+                android.os.Parcel _data = android.os.Parcel.obtain();
+                android.os.Parcel _reply = android.os.Parcel.obtain();
+                int _result;
+                try {
+                    _data.writeInterfaceToken(DESCRIPTOR);
+                    _data.writeInt(a);
+                    _data.writeInt(b);
+                    mRemote.transact(Stub.TRANSACTION_add, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                } finally {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+        }
+
+        static final int TRANSACTION_add = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
     }
 
-    static final int TRANSACTION_add = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
+    public int add(int a, int b) throws android.os.RemoteException;
 }
-
-public int add(int a, int b) throws android.os.RemoteException;
 </code></pre>
-
-<hr />
 
 <p>自动生成的代码有点乱，我们可以把它给格式化一下，可以看到编译工具为我们生成了一个接口IDemoManager,继承于IInterface，啥事也没干；一个add方法，一个静态的内部抽象类，继承与Binder，实现IDemoManager本身，我们来详细看看他的每一部分</p>
 
@@ -248,204 +437,6 @@ public int add(int a, int b) throws android.os.RemoteException;
 <li>断点调试的问题。调试就是跟踪程序运行过程中的堆栈信息，由于每个进程都有自己独立的内存空间和各自的堆栈，无法实现在不同的进程间调试</li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[IPC机制-序列化]]></title>
-    <link href="http://bgallon.github.io/blog/2016/08/08/ipcji-zhi-xu-lie-hua/"/>
-    <updated>2016-08-08T21:59:42+08:00</updated>
-    <id>http://bgallon.github.io/blog/2016/08/08/ipcji-zhi-xu-lie-hua</id>
-    <content type="html"><![CDATA[<p>IPC（Inter-Process Cmmunication）进程间通讯，两个进程间如何交换数据。进程和线程是不一样的，我们可以认为进程包含线程。下面我就开始一步一步的熟悉如何进行进程间通讯。</p>
-
-<!--more-->
-
-
-<h4>序列化</h4>
-
-<p>我们以往的开放的经验中或多或少的都接触过序列，Serializable、Parcelable两个接口我们总会与我们不期而遇，我们最常见的是当我们启动一个Activity时，需要传递一些复杂类型，这个时候我们就要通过序列化的方式进行传递。</p>
-
-<h4>Serializable接口</h4>
-
-<p>Serializables是Java提供的接口，其实它只是一个空接口什么都没有做，使用它实现序列化也是灰常简单，只需实现它就行。但是我们另外要做一件事，就是新加一个标识如下：</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="kd">implements</span> <span class="n">Serializable</span><span class="o">{</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4640203801029274924L</span><span class="o">;</span>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">string</span> <span class="n">username</span><span class="o">;</span>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">string</span> <span class="n">userid</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>是的，记住一定要写上serialVersionUID这个字段，当然值不一定是这个，否者会有惊喜哦！！</p>
-
-<p>如果你不指定serialVersionUID这个值，也照样能够完成序列化，但是某些情况下可能报异常！我们接下来就来捯饬捯饬这个字段是干嘛用的；这个字段是用来辅助序列化和反序列化的，序列化的数据只有serialVersionUID与当前要反序列化的类中的serialVersionUID保持一致，才能正常的反序列化；当进行序列化的时候会保存serialVersionUID的值，在反序列化的时候再去对比是否相等；在不指定值得情况下，系统会计算当前类的hash值给serialVersionUID，一旦类发生变化这个值就会变化，从而出现崩溃，当然如果你修改了类的名字或者字段的类型，那么也同样会抛出异常。</p>
-
-<h4>Pacelable接口</h4>
-
-<p>Pacelable是Android特有的一个接口，相对于Serializable,它实现起来稍微复杂一点。实例如下</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="kd">implements</span> <span class="n">Parcelable</span> <span class="o">{</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="o">;</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">userid</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">protected</span> <span class="nf">User</span><span class="o">(</span><span class="n">Parcel</span> <span class="n">in</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="n">username</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readString</span><span class="o">();</span>
-</span><span class='line'>        <span class="n">userid</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readString</span><span class="o">();</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Creator</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">User</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">CREATOR</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Creator</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">User</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="nd">@Override</span>
-</span><span class='line'>        <span class="kd">public</span> <span class="n">User</span> <span class="nf">createFromParcel</span><span class="o">(</span><span class="n">Parcel</span> <span class="n">in</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>            <span class="k">return</span> <span class="k">new</span> <span class="nf">User</span><span class="o">(</span><span class="n">in</span><span class="o">);</span>
-</span><span class='line'>        <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="nd">@Override</span>
-</span><span class='line'>        <span class="kd">public</span> <span class="n">User</span><span class="o">[]</span> <span class="nf">newArray</span><span class="o">(</span><span class="kt">int</span> <span class="n">size</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>            <span class="k">return</span> <span class="k">new</span> <span class="n">User</span><span class="o">[</span><span class="n">size</span><span class="o">];</span>
-</span><span class='line'>        <span class="o">}</span>
-</span><span class='line'>    <span class="o">};</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nd">@Override</span>
-</span><span class='line'>    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">describeContents</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nd">@Override</span>
-</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">writeToParcel</span><span class="o">(</span><span class="n">Parcel</span> <span class="n">dest</span><span class="o">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="n">dest</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">username</span><span class="o">);</span>
-</span><span class='line'>        <span class="n">dest</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">userid</span><span class="o">);</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p><strong><em>注意</em></strong>这里一定注意writeToParcel(Parcel dest, int flags)和User(Parcel in)中读取或储存属性的顺序呢（猛敲黑板状），先存先读；</p>
-
-<h4>总结</h4>
-
-<p>注意，注意，注意重要的事情说三遍，这是必考点，记好笔记啦；Parcelable的性能比Serializable要好，内存开销方面比较小，所以内存在传递数据时推荐Parcelable,比如activity间传递数据时；但是Serializble序列化方便，可用在保存或者网络传输的时候，另外Android不同版本Parcelable可能会不同，所以不建议用它进行持久化。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Activity启动模式]]></title>
-    <link href="http://bgallon.github.io/blog/2016/08/05/activityqi-dong-mo-shi/"/>
-    <updated>2016-08-05T23:01:49+08:00</updated>
-    <id>http://bgallon.github.io/blog/2016/08/05/activityqi-dong-mo-shi</id>
-    <content type="html"><![CDATA[<p>launchmode是Android一个非常重要的概念，关系到Activity实例的创建和重用；但是他比较琐碎，好多细节需要注意，分清各个模式的具体含义，会让你更好的理解并掌握它。Activity的启动模式有standard、singleTop、singleTask、singleInstance四种，我们可以在声明activity组件时设置lanunchmode值指定启动模式。</p>
-
-<!--more-->
-
-
-<h4>Standed模式</h4>
-
-<p>standard模式（标准模式）是activity默认的启动模式，此种模式下，没启动一次Activity都会重新创建一个Activity实例，一个任务栈中可以有多个实例，也许比较傻，哈哈，这就是默认的standard模式</p>
-
-<h4>SingleTop模式</h4>
-
-<p>栈顶复用模式，通过名字我们就可以知道它大概的意思，就是当启动的Activity在任务栈栈顶时，就不在重新创建一个Activity实例啦，直接复用就行了，这个时候要特别注意，他不会再重新执行以下onCreate、onStart、onResume生命周期方法，因为Activity此时的状态并没有发生变化；一般情况下，我们可能会在onCreate中去加载数据，那么现在onCreate不会重新调用了，我该如何加载新的数据呢？别着急，系统早就为我们想到这一点，这个时候系统会调用Activity中的onNewIntent方法，我们在这里重新加载展示数据；举个🌰：假如现在任务栈中有ABC三个Activity（A在栈底，C在栈顶），我们这里就认为ABC都是singleTop启动模式，此时如果启动C的话，任务栈中的Activity不会有任何变化，因为C就在栈顶，不需要重新再创一个C实例，如果现在启动B，那么栈中Activity为ABCB，具体为什么我就不多说啦。</p>
-
-<h4>SingleTask模式</h4>
-
-<p>栈内复用模式，这里是什么意思呢？就是要启动的Activity在任务重存在，不管在栈的什么位置，都不会重新创建新的实例，和singleTop模式类似，当栈中存在要启动的Activity时，只会调用此Activity的onNewIntent方法；比如现在我们要启动Activity A，如果当前任务中存在A，那么就会调用A中onNewIntent方法，如果不存A，就会重新创建Activity A,并压入栈中。举几个🌰🌰：</p>
-
-<ul>
-<li>任务栈S1中有ABC三个Activity，如果此时已SingleTask模式启动Activity D，其所需要的任务栈为S2，由于S2栈和Activity D都不存在，所以首先会创建一个新的任务栈s2,然后创建一个Activity D实例，放入S2中。</li>
-<li>如果Activity D需要的任务栈为S1情况会怎样呢？此时由于任务栈已经存在，但是Activity D并不在任务栈中，所以会创建Activity D实例，并放到S1栈中</li>
-<li>建设现在S1栈中有ABDC四个Activity，现在要以SingleTask模式启动Activity D，其所需要的任务栈为S1，那么此时由于S1和Activity D都存在了，所以不会重新创建，但是这时栈内的情况会变成什么样呢？答案是：ABD，那C去哪儿了？被销毁了！singleTask默认有clearTop效果，会把Activity D上的Activity出栈。</li>
-</ul>
-
-
-<h4>SingleInstance模式</h4>
-
-<p>单实例模式，它和singleTask类似，但是有一点区别，就是只能单独在一个任务栈中</p>
-
-<h4>任务栈</h4>
-
-<p>前文一曾多次提到任务栈，任务栈就是一个具有栈结构的容器，可以防止多个Activity;当启动一个应用时，系统会创建一个task,来放置根Activity；默认情况下，Activity会放在同一个task中，如果启动一个新的Activity的就把它压入栈顶，按返回键就把栈顶的Activity的弹出task，之前的Activity的又被显示出来，如果此时task中没有Activity,将会回到桌面；另外应用之间的task是相互独立的，比如我启动应用A，回到桌面有启动应用B，我还可以回到桌面再次启动A，但是内容并不会发生变化，之前应用A中的task还依然保留着。</p>
-
-<h4>affinity</h4>
-
-<p>有时，Android需要知道一个Activity他所属的task，就是通过这个属性来确定的。默认情况下，affinity的值为应用的包名，我也可以通过taskaffinity进行设置，其有两个作用：</p>
-
-<ul>
-<li>根据affinity重新为Activity选择宿主task</li>
-<li>启动singleTask的Activity，会根据affinity查找或者重新创建一个task</li>
-</ul>
-
-
-<h4>常见的flags</h4>
-
-<ul>
-<li>FLAG_ACTIVITY_NEW_TASK:当启动activity的intent中设置了此flag时，系统会寻找或者重新创建一个task来存放activity，寻找的依据就是activity的affinity，如过找到了一个task，则将此Activity放到这个task，如果找不到的话，就创建一个task，并把activity压入栈中，<strong><em>注意：</em></strong>如果同一个应用中的activity的taskaffinity使用的默认值或者设置的同一个值，在应用内使用这个标记是没有任何作用的，因为当前的task就是要找的task</li>
-<li>FLAG_ACTIVITY_CLEAR_TOP：当启动的Activity的intent中设置了这个标记，如果栈中存在要启动的Activity，则会把此Activity之上的Activity出栈；例如在MainActivity启动SecondActivity，在SecondActivity启动ThirdActivity，此时在ThirdActivity中启动MainActivity并在启动的intent中增加FLAG_ACTIVITY_CLEAR_TOP标记，此时，SecondActivity，ThirdActivity将会出栈，MainActivity重新出现</li>
-<li>FLAG_ACTIVITY_SINGLE_TOP:当要启动的Activity在task栈顶时，不会重新创建Activity，而是重用此Activity</li>
-</ul>
-
-
-<p>这里推荐几篇写的比较好的博客：</p>
-
-<p><a href="http://blog.csdn.net/liuhe688/article/details/6761337">Activity的task相关</a></p>
-
-<p><a href="http://blog.csdn.net/guolin_blog/article/details/41087993">Android任务和返回栈完全解析，细数那些你所不知道的细节 </a></p>
 ]]></content>
   </entry>
   

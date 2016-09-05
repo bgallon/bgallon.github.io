@@ -1,0 +1,232 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>类加载器基础 - 狂奔的蜗牛</title>
+	<meta name="author" content="fishpan">
+
+	
+	<meta name="description" content="Java中有一个加载器是ClassLoader，但是Java中的加载器不能直接应用在Android上边；对于Android上的应用，虽然都是用Java开发，并且使用了标准的Java编译器编译出来的Class文件，但是最终的Apk文件却包含的是dex类型的文件， &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="" rel="alternate" title="狂奔的蜗牛" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">狂奔的蜗牛</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.baidu.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:bgallon.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+    
+	</div>
+	<form class="search" action="https://www.baidu.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:bgallon.github.io">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">类加载器基础</h2>
+	<div class="entry-content"><p>Java中有一个加载器是ClassLoader，但是Java中的加载器不能直接应用在Android上边；对于Android上的应用，虽然都是用Java开发，并且使用了标准的Java编译器编译出来的Class文件，但是最终的Apk文件却包含的是dex类型的文件，dex文件是将所需的所有Class文件重新打包；由于dex文件是一种优化过的class文件，所以并不能直接用ClassLoader加载, <a href="https://medium.com/@HeadFirstDroid/how-apps-are-built-and-run-on-the-android-runtime-art-c027f73edb09#.ul2b6736x">class到apk的过程</a>，使用ClassLoader会出现什么问题可以看下这篇文章<a href="http://blog.csdn.net/jiangwei0910410003/article/details/17679823"> Android中的动态加载机制</a>,为了在Android中能够动态加载，Android提供了两个DexClassLoader及PathClassLoader。</p>
+
+<!--more-->
+
+
+<h4>插件类</h4>
+
+<figure class='code'><figcaption><span>插件类</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Plugin</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">print</span><span class="o">(){</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;fishpan_log&quot;</span><span class="o">,</span> <span class="s">&quot;-----print-----&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="s">&quot;OK&quot;</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下来我们需要把插件类打包，并插件apk放到sdcard上。</p>
+
+<h4>DexClassLoader</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kt">void</span> <span class="nf">dexClassLoader</span><span class="o">(){</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">sourceDir</span> <span class="o">=</span> <span class="s">&quot;/sdcard/plugin-debug.apk&quot;</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">DexClassLoader</span> <span class="n">clzzLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">DexClassLoader</span><span class="o">(</span><span class="n">sourceDir</span><span class="o">,</span> <span class="n">getApplicationInfo</span><span class="o">().</span><span class="na">dataDir</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="n">getClassLoader</span><span class="o">());</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">clzzLoader</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="s">&quot;com.fishpan.plugin.Plugin&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">object</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Method</span> <span class="n">method</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getMethod</span><span class="o">(</span><span class="s">&quot;print&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">object</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;result:&quot;</span> <span class="o">+</span> <span class="n">result</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>因为在宿主apk中，是没有Plugin类，所以我们在宿主程序中不能直接使用，只能使用反射来进行。DexClassLoader构造参数有四个参数，第一个是dex或者apk文件地址；第二个是解压后dex文件的地址，这里我们使用宿主的dataDir;第三个是so文件路径，可以为空；第四个是父类加载器</p>
+
+<h4>PathClassLoader</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kt">void</span> <span class="nf">pathClassLoader</span><span class="o">(){</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">sourceDir</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">PackageInfo</span> <span class="n">packInfo</span> <span class="o">=</span> <span class="n">getPackageManager</span><span class="o">().</span><span class="na">getPackageInfo</span><span class="o">(</span><span class="s">&quot;com.fishpan.plugin&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">sourceDir</span> <span class="o">=</span> <span class="n">packInfo</span><span class="o">.</span><span class="na">applicationInfo</span><span class="o">.</span><span class="na">sourceDir</span><span class="o">;</span>
+</span><span class='line'><span class="c1">//            sourceDir = &quot;/sdcard/plugin-debug.apk&quot;;   在安装的情况下,使用这种地址也是可以成功找到Class的</span>
+</span><span class='line'>            <span class="n">PathClassLoader</span> <span class="n">clzzLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">PathClassLoader</span><span class="o">(</span><span class="n">sourceDir</span><span class="o">,</span> <span class="n">getClassLoader</span><span class="o">());</span>
+</span><span class='line'>            <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">clzzLoader</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="s">&quot;com.fishpan.plugin.Plugin&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">object</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Method</span> <span class="n">method</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getMethod</span><span class="o">(</span><span class="s">&quot;print&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">object</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;result:&quot;</span> <span class="o">+</span> <span class="n">result</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>PathClassLoader和DexClassLoader的区别就是据说只能加载已经安装在Android系统内APK文件，但是我也做了实验，安装的情况下，apk文件的路径自己指定也能加载到Class，在实际使用过程中，还是使用DexClassLoader比较靠谱，</p>
+
+<p>运行情况如下</p>
+
+<p><img src="http://i2.buimg.com/567571/7d89c35fce163706.gif" alt="" /></p>
+
+<p>另外这里使用插件类，都是使用反射完成的，我们可以定义一个公共的接口，这样在插件apk和宿主apk里放入接口，这样就不用使用反射了，用起来就比较简单和容易了。</p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+Sep 4th, 2016</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/android/'>android</a>, <a class='category' href='/blog/categories/cha-jian-hua/'>插件化</a>
+
+
+</div>
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		
+	</div>
+	
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    fishpan
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: binder | 狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/blog/categories/binder/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-03T12:05:00+08:00</updated>
+  <updated>2016-09-05T23:06:00+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -47,107 +47,105 @@ interface IDemoManager {
 
 <p>下面我就来研究一下为我们生成的代码，这个才是最关键</p>
 
-<hr />
-
-<pre><code>public interface IDemoManager extends android.os.IInterface {
-/**
- * Local-side IPC implementation stub class.
- */
-public static abstract class Stub extends android.os.Binder implements com.fishpan.appliactions.IDemoManager {
-    private static final java.lang.String DESCRIPTOR = "com.fishpan.appliactions.IDemoManager";
-
+<pre><code class="java">
+    public interface IDemoManager extends android.os.IInterface {
     /**
-     * Construct the stub at attach it to the interface.
+     * Local-side IPC implementation stub class.
      */
-    public Stub() {
-        this.attachInterface(this, DESCRIPTOR);
-    }
+    public static abstract class Stub extends android.os.Binder implements com.fishpan.appliactions.IDemoManager {
+        private static final java.lang.String DESCRIPTOR = "com.fishpan.appliactions.IDemoManager";
 
-    /**
-     * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,
-     * generating a proxy if needed.
-     */
-    public static com.fishpan.appliactions.IDemoManager asInterface(android.os.IBinder obj) {
-        if ((obj == null)) {
-            return null;
+        /**
+         * Construct the stub at attach it to the interface.
+         */
+        public Stub() {
+            this.attachInterface(this, DESCRIPTOR);
         }
-        android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
-        if (((iin != null) &amp;&amp; (iin instanceof com.fishpan.appliactions.IDemoManager))) {
-            return ((com.fishpan.appliactions.IDemoManager) iin);
-        }
-        return new com.fishpan.appliactions.IDemoManager.Stub.Proxy(obj);
-    }
 
-    @Override
-    public android.os.IBinder asBinder() {
-        return this;
-    }
-
-    @Override
-    public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
-        switch (code) {
-            case INTERFACE_TRANSACTION: {
-                reply.writeString(DESCRIPTOR);
-                return true;
+        /**
+         * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,
+         * generating a proxy if needed.
+         */
+        public static com.fishpan.appliactions.IDemoManager asInterface(android.os.IBinder obj) {
+            if ((obj == null)) {
+                return null;
             }
-            case TRANSACTION_add: {
-                data.enforceInterface(DESCRIPTOR);
-                int _arg0;
-                _arg0 = data.readInt();
-                int _arg1;
-                _arg1 = data.readInt();
-                int _result = this.add(_arg0, _arg1);
-                reply.writeNoException();
-                reply.writeInt(_result);
-                return true;
+            android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+            if (((iin != null) &amp;&amp; (iin instanceof com.fishpan.appliactions.IDemoManager))) {
+                return ((com.fishpan.appliactions.IDemoManager) iin);
             }
-        }
-        return super.onTransact(code, data, reply, flags);
-    }
-
-    private static class Proxy implements com.fishpan.appliactions.IDemoManager {
-        private android.os.IBinder mRemote;
-
-        Proxy(android.os.IBinder remote) {
-            mRemote = remote;
+            return new com.fishpan.appliactions.IDemoManager.Stub.Proxy(obj);
         }
 
         @Override
         public android.os.IBinder asBinder() {
-            return mRemote;
-        }
-
-        public java.lang.String getInterfaceDescriptor() {
-            return DESCRIPTOR;
+            return this;
         }
 
         @Override
-        public int add(int a, int b) throws android.os.RemoteException {
-            android.os.Parcel _data = android.os.Parcel.obtain();
-            android.os.Parcel _reply = android.os.Parcel.obtain();
-            int _result;
-            try {
-                _data.writeInterfaceToken(DESCRIPTOR);
-                _data.writeInt(a);
-                _data.writeInt(b);
-                mRemote.transact(Stub.TRANSACTION_add, _data, _reply, 0);
-                _reply.readException();
-                _result = _reply.readInt();
-            } finally {
-                _reply.recycle();
-                _data.recycle();
+        public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
+            switch (code) {
+                case INTERFACE_TRANSACTION: {
+                    reply.writeString(DESCRIPTOR);
+                    return true;
+                }
+                case TRANSACTION_add: {
+                    data.enforceInterface(DESCRIPTOR);
+                    int _arg0;
+                    _arg0 = data.readInt();
+                    int _arg1;
+                    _arg1 = data.readInt();
+                    int _result = this.add(_arg0, _arg1);
+                    reply.writeNoException();
+                    reply.writeInt(_result);
+                    return true;
+                }
             }
-            return _result;
+            return super.onTransact(code, data, reply, flags);
         }
+
+        private static class Proxy implements com.fishpan.appliactions.IDemoManager {
+            private android.os.IBinder mRemote;
+
+            Proxy(android.os.IBinder remote) {
+                mRemote = remote;
+            }
+
+            @Override
+            public android.os.IBinder asBinder() {
+                return mRemote;
+            }
+
+            public java.lang.String getInterfaceDescriptor() {
+                return DESCRIPTOR;
+            }
+
+            @Override
+            public int add(int a, int b) throws android.os.RemoteException {
+                android.os.Parcel _data = android.os.Parcel.obtain();
+                android.os.Parcel _reply = android.os.Parcel.obtain();
+                int _result;
+                try {
+                    _data.writeInterfaceToken(DESCRIPTOR);
+                    _data.writeInt(a);
+                    _data.writeInt(b);
+                    mRemote.transact(Stub.TRANSACTION_add, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                } finally {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+        }
+
+        static final int TRANSACTION_add = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
     }
 
-    static final int TRANSACTION_add = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
+    public int add(int a, int b) throws android.os.RemoteException;
 }
-
-public int add(int a, int b) throws android.os.RemoteException;
 </code></pre>
-
-<hr />
 
 <p>自动生成的代码有点乱，我们可以把它给格式化一下，可以看到编译工具为我们生成了一个接口IDemoManager,继承于IInterface，啥事也没干；一个add方法，一个静态的内部抽象类，继承与Binder，实现IDemoManager本身，我们来详细看看他的每一部分</p>
 

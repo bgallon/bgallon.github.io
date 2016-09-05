@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 插件化 | 狂奔的蜗牛]]></title>
+  <link href="http://bgallon.github.io/blog/categories/cha-jian-hua/atom.xml" rel="self"/>
+  <link href="http://bgallon.github.io/"/>
+  <updated>2016-09-05T23:06:00+08:00</updated>
+  <id>http://bgallon.github.io/</id>
+  <author>
+    <name><![CDATA[fishpan]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[类加载器基础]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/04/lei-jia-zai-qi-ji-chu/"/>
+    <updated>2016-09-04T15:24:23+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/04/lei-jia-zai-qi-ji-chu</id>
+    <content type="html"><![CDATA[<p>Java中有一个加载器是ClassLoader，但是Java中的加载器不能直接应用在Android上边；对于Android上的应用，虽然都是用Java开发，并且使用了标准的Java编译器编译出来的Class文件，但是最终的Apk文件却包含的是dex类型的文件，dex文件是将所需的所有Class文件重新打包；由于dex文件是一种优化过的class文件，所以并不能直接用ClassLoader加载, <a href="https://medium.com/@HeadFirstDroid/how-apps-are-built-and-run-on-the-android-runtime-art-c027f73edb09#.ul2b6736x">class到apk的过程</a>，使用ClassLoader会出现什么问题可以看下这篇文章<a href="http://blog.csdn.net/jiangwei0910410003/article/details/17679823"> Android中的动态加载机制</a>,为了在Android中能够动态加载，Android提供了两个DexClassLoader及PathClassLoader。</p>
+
+<!--more-->
+
+
+<h4>插件类</h4>
+
+<pre><code class="java 插件类">public class Plugin {
+    public String print(){
+        Log.d("fishpan_log", "-----print-----");
+        return "OK";
+    }
+}
+</code></pre>
+
+<p>接下来我们需要把插件类打包，并插件apk放到sdcard上。</p>
+
+<h4>DexClassLoader</h4>
+
+<pre><code class="java">private void dexClassLoader(){
+        String sourceDir = "/sdcard/plugin-debug.apk";
+        DexClassLoader clzzLoader = new DexClassLoader(sourceDir, getApplicationInfo().dataDir, null, getClassLoader());
+        try {
+            Class&lt;?&gt; clazz = clzzLoader.loadClass("com.fishpan.plugin.Plugin");
+            Object object = clazz.newInstance();
+            Method method = clazz.getMethod("print");
+            Object result = method.invoke(object);
+            Toast.makeText(this, "result:" + result, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+</code></pre>
+
+<p>因为在宿主apk中，是没有Plugin类，所以我们在宿主程序中不能直接使用，只能使用反射来进行。DexClassLoader构造参数有四个参数，第一个是dex或者apk文件地址；第二个是解压后dex文件的地址，这里我们使用宿主的dataDir;第三个是so文件路径，可以为空；第四个是父类加载器</p>
+
+<h4>PathClassLoader</h4>
+
+<pre><code class="java">private void pathClassLoader(){
+        String sourceDir = "";
+        try {
+            PackageInfo packInfo = getPackageManager().getPackageInfo("com.fishpan.plugin", 0);
+            sourceDir = packInfo.applicationInfo.sourceDir;
+//            sourceDir = "/sdcard/plugin-debug.apk";   在安装的情况下,使用这种地址也是可以成功找到Class的
+            PathClassLoader clzzLoader = new PathClassLoader(sourceDir, getClassLoader());
+            Class&lt;?&gt; clazz = clzzLoader.loadClass("com.fishpan.plugin.Plugin");
+            Object object = clazz.newInstance();
+            Method method = clazz.getMethod("print");
+            Object result = method.invoke(object);
+            Toast.makeText(this, "result:" + result, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+</code></pre>
+
+<p>PathClassLoader和DexClassLoader的区别就是据说只能加载已经安装在Android系统内APK文件，但是我也做了实验，安装的情况下，apk文件的路径自己指定也能加载到Class，在实际使用过程中，还是使用DexClassLoader比较靠谱，</p>
+
+<p>运行情况如下</p>
+
+<p><img src="http://i2.buimg.com/567571/7d89c35fce163706.gif" alt="" /></p>
+
+<p>另外这里使用插件类，都是使用反射完成的，我们可以定义一个公共的接口，这样在插件apk和宿主apk里放入接口，这样就不用使用反射了，用起来就比较简单和容易了。</p>
+]]></content>
+  </entry>
+  
+</feed>

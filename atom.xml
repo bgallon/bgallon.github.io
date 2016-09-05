@@ -4,7 +4,7 @@
   <title><![CDATA[狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-03T12:05:00+08:00</updated>
+  <updated>2016-09-05T23:06:00+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -12,6 +12,298 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[类加载器基础]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/04/lei-jia-zai-qi-ji-chu/"/>
+    <updated>2016-09-04T15:24:23+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/04/lei-jia-zai-qi-ji-chu</id>
+    <content type="html"><![CDATA[<p>Java中有一个加载器是ClassLoader，但是Java中的加载器不能直接应用在Android上边；对于Android上的应用，虽然都是用Java开发，并且使用了标准的Java编译器编译出来的Class文件，但是最终的Apk文件却包含的是dex类型的文件，dex文件是将所需的所有Class文件重新打包；由于dex文件是一种优化过的class文件，所以并不能直接用ClassLoader加载, <a href="https://medium.com/@HeadFirstDroid/how-apps-are-built-and-run-on-the-android-runtime-art-c027f73edb09#.ul2b6736x">class到apk的过程</a>，使用ClassLoader会出现什么问题可以看下这篇文章<a href="http://blog.csdn.net/jiangwei0910410003/article/details/17679823"> Android中的动态加载机制</a>,为了在Android中能够动态加载，Android提供了两个DexClassLoader及PathClassLoader。</p>
+
+<!--more-->
+
+
+<h4>插件类</h4>
+
+<figure class='code'><figcaption><span>插件类</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Plugin</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">print</span><span class="o">(){</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;fishpan_log&quot;</span><span class="o">,</span> <span class="s">&quot;-----print-----&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="s">&quot;OK&quot;</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下来我们需要把插件类打包，并插件apk放到sdcard上。</p>
+
+<h4>DexClassLoader</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kt">void</span> <span class="nf">dexClassLoader</span><span class="o">(){</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">sourceDir</span> <span class="o">=</span> <span class="s">&quot;/sdcard/plugin-debug.apk&quot;</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">DexClassLoader</span> <span class="n">clzzLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">DexClassLoader</span><span class="o">(</span><span class="n">sourceDir</span><span class="o">,</span> <span class="n">getApplicationInfo</span><span class="o">().</span><span class="na">dataDir</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="n">getClassLoader</span><span class="o">());</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">clzzLoader</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="s">&quot;com.fishpan.plugin.Plugin&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">object</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Method</span> <span class="n">method</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getMethod</span><span class="o">(</span><span class="s">&quot;print&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">object</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;result:&quot;</span> <span class="o">+</span> <span class="n">result</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>因为在宿主apk中，是没有Plugin类，所以我们在宿主程序中不能直接使用，只能使用反射来进行。DexClassLoader构造参数有四个参数，第一个是dex或者apk文件地址；第二个是解压后dex文件的地址，这里我们使用宿主的dataDir;第三个是so文件路径，可以为空；第四个是父类加载器</p>
+
+<h4>PathClassLoader</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kt">void</span> <span class="nf">pathClassLoader</span><span class="o">(){</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">sourceDir</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">PackageInfo</span> <span class="n">packInfo</span> <span class="o">=</span> <span class="n">getPackageManager</span><span class="o">().</span><span class="na">getPackageInfo</span><span class="o">(</span><span class="s">&quot;com.fishpan.plugin&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">sourceDir</span> <span class="o">=</span> <span class="n">packInfo</span><span class="o">.</span><span class="na">applicationInfo</span><span class="o">.</span><span class="na">sourceDir</span><span class="o">;</span>
+</span><span class='line'><span class="c1">//            sourceDir = &quot;/sdcard/plugin-debug.apk&quot;;   在安装的情况下,使用这种地址也是可以成功找到Class的</span>
+</span><span class='line'>            <span class="n">PathClassLoader</span> <span class="n">clzzLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">PathClassLoader</span><span class="o">(</span><span class="n">sourceDir</span><span class="o">,</span> <span class="n">getClassLoader</span><span class="o">());</span>
+</span><span class='line'>            <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">clzzLoader</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="s">&quot;com.fishpan.plugin.Plugin&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">object</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Method</span> <span class="n">method</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getMethod</span><span class="o">(</span><span class="s">&quot;print&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">object</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;result:&quot;</span> <span class="o">+</span> <span class="n">result</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>PathClassLoader和DexClassLoader的区别就是据说只能加载已经安装在Android系统内APK文件，但是我也做了实验，安装的情况下，apk文件的路径自己指定也能加载到Class，在实际使用过程中，还是使用DexClassLoader比较靠谱，</p>
+
+<p>运行情况如下</p>
+
+<p><img src="http://i2.buimg.com/567571/7d89c35fce163706.gif" alt="" /></p>
+
+<p>另外这里使用插件类，都是使用反射完成的，我们可以定义一个公共的接口，这样在插件apk和宿主apk里放入接口，这样就不用使用反射了，用起来就比较简单和容易了。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[代理模式]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi/"/>
+    <updated>2016-09-03T14:59:28+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi</id>
+    <content type="html"><![CDATA[<p>所谓代理，就是一个人或者机构代表另一个人或者机构采取行动。在一些情况下，一个客户不想或者不能够直接引用一个对象，而代理对象可以在客户端和目标对象之间起到中介的作用。</p>
+
+<!--more-->
+
+
+<p><img src="http://i1.piimg.com/567571/a74ac82fd02cddc9.gif" alt="" /></p>
+
+<p>Subject:委托对象和代理对象的共同接口</p>
+
+<p>RealSubject:委托对象</p>
+
+<p>Proxy:代理对象</p>
+
+<h4>代理实现分类：</h4>
+
+<ul>
+<li><p>静态代理</p>
+
+<p>  代理类是在编译时就实现好了。</p></li>
+<li><p>动态代理</p>
+
+<p>  动态代理类的源码是在程序运行期间由JVM根据反射等机制动态的生成，所以不存在代理类的字节码文件。</p></li>
+</ul>
+
+
+<h4>静态代理</h4>
+
+<figure class='code'><figcaption><span>公共接口</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Subject</span> <span class="o">{</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">request</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>委托对象</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">RealSubject</span> <span class="kd">implements</span> <span class="n">Subject</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">request</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;request&quot;</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>代理对象</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Proxy</span> <span class="kd">implements</span> <span class="n">Subject</span><span class="o">{</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Subject</span> <span class="n">mSubject</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="nf">Proxy</span><span class="o">(</span><span class="n">Subject</span> <span class="n">subject</span><span class="o">){</span>
+</span><span class='line'>      <span class="n">mSubject</span> <span class="o">=</span> <span class="n">subject</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">request</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;start request&quot;</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">if</span><span class="o">(</span><span class="kc">null</span> <span class="o">!=</span> <span class="n">mSubject</span><span class="o">){</span>
+</span><span class='line'>          <span class="n">mSubject</span><span class="o">.</span><span class="na">request</span><span class="o">();</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;end request&quot;</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>静态代理类优缺点</p>
+
+<p>优点：业务类只需要关注业务逻辑本身，保证了业务类的重用性。这是代理的共有优点。</p>
+
+<p>缺点：</p>
+
+<ul>
+<li>代理对象的一个接口只服务于一种类型的对象，如果要代理的方法很多，势必要为每一种方法都进行代理，静态代理在程序规模稍大时就无法胜任了。</li>
+<li>如果接口增加一个方法，除了所有实现类需要实现这个方法外，所有代理类也需要实现此方法。增加了代码维护的复杂度。</li>
+</ul>
+
+
+<h4>动态代理</h4>
+
+<p>实现动态代理模式，首先我们需要创建一个调度器，只需实现InvocationHandler接口即可</p>
+
+<figure class='code'><figcaption><span>调度器</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SubjectHandler</span> <span class="kd">implements</span> <span class="n">InvocationHandler</span><span class="o">{</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Object</span> <span class="n">delegate</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="nf">SubjectHandler</span><span class="o">(</span><span class="n">Object</span> <span class="n">delegate</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">delegate</span> <span class="o">=</span> <span class="n">delegate</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">Object</span> <span class="nf">invoke</span><span class="o">(</span><span class="n">Object</span> <span class="n">proxy</span><span class="o">,</span> <span class="n">Method</span> <span class="n">method</span><span class="o">,</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span>
+</span><span class='line'>          <span class="kd">throws</span> <span class="n">Throwable</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;start invoke&quot;</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">Object</span> <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">delegate</span><span class="o">,</span> <span class="n">args</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;end invoke&quot;</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Subject</span> <span class="n">delegate</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">RealSubject</span><span class="o">();</span>
+</span><span class='line'><span class="n">SubjectHandler</span> <span class="n">handler</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SubjectHandler</span><span class="o">(</span><span class="n">delegate</span><span class="o">);</span>
+</span><span class='line'><span class="n">Subject</span> <span class="n">proxy</span> <span class="o">=</span> <span class="o">(</span><span class="n">Subject</span><span class="o">)</span><span class="n">java</span><span class="o">.</span><span class="na">lang</span><span class="o">.</span><span class="na">reflect</span><span class="o">.</span><span class="na">Proxy</span><span class="o">.</span><span class="na">newProxyInstance</span><span class="o">(</span>
+</span><span class='line'>  <span class="n">delegate</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getClassLoader</span><span class="o">(),</span>
+</span><span class='line'>  <span class="n">delegate</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getInterfaces</span><span class="o">(),</span>
+</span><span class='line'>  <span class="n">handler</span><span class="o">);</span>
+</span><span class='line'><span class="n">proxy</span><span class="o">.</span><span class="na">request</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>优点：
+动态代理与静态代理相比较，最大的好处是接口中声明的所有方法都被转移到调用处理器一个集中的方法中处理（InvocationHandler.invoke）。这样，在接口方法数量比较多的时候，我们可以进行灵活处理，而不需要像静态代理那样每一个方法进行中转。在本示例中看不出来，因为invoke方法体内嵌入了具体的外围业务（记录任务处理前后时间并计算时间差），实际中可以类似Spring AOP那样配置外围业务。</p>
+
+<p>缺点：
+无法摆脱仅支持 interface 代理的桎梏，因为它的设计注定了这个遗憾。回想一下那些动态生成的代理类的继承关系图，它们已经注定有一个共同的父类叫 Proxy。Java 的继承机制注定了这些动态代理类们无法实现对 class 的动态代理，原因是多继承在 Java 中本质上就行不通。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[IPC机制-Binder]]></title>
@@ -52,107 +344,202 @@
 
 <p>下面我就来研究一下为我们生成的代码，这个才是最关键</p>
 
-<hr />
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">IDemoManager</span> <span class="kd">extends</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IInterface</span> <span class="o">{</span>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Local-side IPC implementation stub class.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Stub</span> <span class="kd">extends</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Binder</span> <span class="kd">implements</span> <span class="n">com</span><span class="o">.</span><span class="na">fishpan</span><span class="o">.</span><span class="na">appliactions</span><span class="o">.</span><span class="na">IDemoManager</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">java</span><span class="o">.</span><span class="na">lang</span><span class="o">.</span><span class="na">String</span> <span class="n">DESCRIPTOR</span> <span class="o">=</span> <span class="s">&quot;com.fishpan.appliactions.IDemoManager&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * Construct the stub at attach it to the interface.</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">Stub</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">attachInterface</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">DESCRIPTOR</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,</span>
+</span><span class='line'><span class="cm">     * generating a proxy if needed.</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="n">com</span><span class="o">.</span><span class="na">fishpan</span><span class="o">.</span><span class="na">appliactions</span><span class="o">.</span><span class="na">IDemoManager</span> <span class="nf">asInterface</span><span class="o">(</span><span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IBinder</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">((</span><span class="n">obj</span> <span class="o">==</span> <span class="kc">null</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IInterface</span> <span class="n">iin</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="na">queryLocalInterface</span><span class="o">(</span><span class="n">DESCRIPTOR</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(((</span><span class="n">iin</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">iin</span> <span class="k">instanceof</span> <span class="n">com</span><span class="o">.</span><span class="na">fishpan</span><span class="o">.</span><span class="na">appliactions</span><span class="o">.</span><span class="na">IDemoManager</span><span class="o">)))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="o">((</span><span class="n">com</span><span class="o">.</span><span class="na">fishpan</span><span class="o">.</span><span class="na">appliactions</span><span class="o">.</span><span class="na">IDemoManager</span><span class="o">)</span> <span class="n">iin</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="k">return</span> <span class="k">new</span> <span class="n">com</span><span class="o">.</span><span class="na">fishpan</span><span class="o">.</span><span class="na">appliactions</span><span class="o">.</span><span class="na">IDemoManager</span><span class="o">.</span><span class="na">Stub</span><span class="o">.</span><span class="na">Proxy</span><span class="o">(</span><span class="n">obj</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IBinder</span> <span class="nf">asBinder</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="k">this</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">onTransact</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Parcel</span> <span class="n">data</span><span class="o">,</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Parcel</span> <span class="n">reply</span><span class="o">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">RemoteException</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">switch</span> <span class="o">(</span><span class="n">code</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">INTERFACE_TRANSACTION:</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">reply</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">DESCRIPTOR</span><span class="o">);</span>
+</span><span class='line'>                <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">TRANSACTION_add:</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">data</span><span class="o">.</span><span class="na">enforceInterface</span><span class="o">(</span><span class="n">DESCRIPTOR</span><span class="o">);</span>
+</span><span class='line'>                <span class="kt">int</span> <span class="n">_arg0</span><span class="o">;</span>
+</span><span class='line'>                <span class="n">_arg0</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">readInt</span><span class="o">();</span>
+</span><span class='line'>                <span class="kt">int</span> <span class="n">_arg1</span><span class="o">;</span>
+</span><span class='line'>                <span class="n">_arg1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">readInt</span><span class="o">();</span>
+</span><span class='line'>                <span class="kt">int</span> <span class="n">_result</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">_arg0</span><span class="o">,</span> <span class="n">_arg1</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">reply</span><span class="o">.</span><span class="na">writeNoException</span><span class="o">();</span>
+</span><span class='line'>                <span class="n">reply</span><span class="o">.</span><span class="na">writeInt</span><span class="o">(</span><span class="n">_result</span><span class="o">);</span>
+</span><span class='line'>                <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">onTransact</span><span class="o">(</span><span class="n">code</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="n">flags</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Proxy</span> <span class="kd">implements</span> <span class="n">com</span><span class="o">.</span><span class="na">fishpan</span><span class="o">.</span><span class="na">appliactions</span><span class="o">.</span><span class="na">IDemoManager</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">private</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IBinder</span> <span class="n">mRemote</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">Proxy</span><span class="o">(</span><span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IBinder</span> <span class="n">remote</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">mRemote</span> <span class="o">=</span> <span class="n">remote</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nd">@Override</span>
+</span><span class='line'>        <span class="kd">public</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IBinder</span> <span class="nf">asBinder</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">mRemote</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">public</span> <span class="n">java</span><span class="o">.</span><span class="na">lang</span><span class="o">.</span><span class="na">String</span> <span class="nf">getInterfaceDescriptor</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">DESCRIPTOR</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nd">@Override</span>
+</span><span class='line'>        <span class="kd">public</span> <span class="kt">int</span> <span class="nf">add</span><span class="o">(</span><span class="kt">int</span> <span class="n">a</span><span class="o">,</span> <span class="kt">int</span> <span class="n">b</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">RemoteException</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Parcel</span> <span class="n">_data</span> <span class="o">=</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Parcel</span><span class="o">.</span><span class="na">obtain</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Parcel</span> <span class="n">_reply</span> <span class="o">=</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Parcel</span><span class="o">.</span><span class="na">obtain</span><span class="o">();</span>
+</span><span class='line'>            <span class="kt">int</span> <span class="n">_result</span><span class="o">;</span>
+</span><span class='line'>            <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">_data</span><span class="o">.</span><span class="na">writeInterfaceToken</span><span class="o">(</span><span class="n">DESCRIPTOR</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">_data</span><span class="o">.</span><span class="na">writeInt</span><span class="o">(</span><span class="n">a</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">_data</span><span class="o">.</span><span class="na">writeInt</span><span class="o">(</span><span class="n">b</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">mRemote</span><span class="o">.</span><span class="na">transact</span><span class="o">(</span><span class="n">Stub</span><span class="o">.</span><span class="na">TRANSACTION_add</span><span class="o">,</span> <span class="n">_data</span><span class="o">,</span> <span class="n">_reply</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">_reply</span><span class="o">.</span><span class="na">readException</span><span class="o">();</span>
+</span><span class='line'>                <span class="n">_result</span> <span class="o">=</span> <span class="n">_reply</span><span class="o">.</span><span class="na">readInt</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">_reply</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+</span><span class='line'>                <span class="n">_data</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">_result</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">TRANSACTION_add</span> <span class="o">=</span> <span class="o">(</span><span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">IBinder</span><span class="o">.</span><span class="na">FIRST_CALL_TRANSACTION</span> <span class="o">+</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="nf">add</span><span class="o">(</span><span class="kt">int</span> <span class="n">a</span><span class="o">,</span> <span class="kt">int</span> <span class="n">b</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">RemoteException</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<pre><code>public interface IDemoManager extends android.os.IInterface {
-/**
- * Local-side IPC implementation stub class.
- */
-public static abstract class Stub extends android.os.Binder implements com.fishpan.appliactions.IDemoManager {
-    private static final java.lang.String DESCRIPTOR = "com.fishpan.appliactions.IDemoManager";
-
-    /**
-     * Construct the stub at attach it to the interface.
-     */
-    public Stub() {
-        this.attachInterface(this, DESCRIPTOR);
-    }
-
-    /**
-     * Cast an IBinder object into an com.fishpan.appliactions.IDemoManager interface,
-     * generating a proxy if needed.
-     */
-    public static com.fishpan.appliactions.IDemoManager asInterface(android.os.IBinder obj) {
-        if ((obj == null)) {
-            return null;
-        }
-        android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
-        if (((iin != null) &amp;&amp; (iin instanceof com.fishpan.appliactions.IDemoManager))) {
-            return ((com.fishpan.appliactions.IDemoManager) iin);
-        }
-        return new com.fishpan.appliactions.IDemoManager.Stub.Proxy(obj);
-    }
-
-    @Override
-    public android.os.IBinder asBinder() {
-        return this;
-    }
-
-    @Override
-    public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws android.os.RemoteException {
-        switch (code) {
-            case INTERFACE_TRANSACTION: {
-                reply.writeString(DESCRIPTOR);
-                return true;
-            }
-            case TRANSACTION_add: {
-                data.enforceInterface(DESCRIPTOR);
-                int _arg0;
-                _arg0 = data.readInt();
-                int _arg1;
-                _arg1 = data.readInt();
-                int _result = this.add(_arg0, _arg1);
-                reply.writeNoException();
-                reply.writeInt(_result);
-                return true;
-            }
-        }
-        return super.onTransact(code, data, reply, flags);
-    }
-
-    private static class Proxy implements com.fishpan.appliactions.IDemoManager {
-        private android.os.IBinder mRemote;
-
-        Proxy(android.os.IBinder remote) {
-            mRemote = remote;
-        }
-
-        @Override
-        public android.os.IBinder asBinder() {
-            return mRemote;
-        }
-
-        public java.lang.String getInterfaceDescriptor() {
-            return DESCRIPTOR;
-        }
-
-        @Override
-        public int add(int a, int b) throws android.os.RemoteException {
-            android.os.Parcel _data = android.os.Parcel.obtain();
-            android.os.Parcel _reply = android.os.Parcel.obtain();
-            int _result;
-            try {
-                _data.writeInterfaceToken(DESCRIPTOR);
-                _data.writeInt(a);
-                _data.writeInt(b);
-                mRemote.transact(Stub.TRANSACTION_add, _data, _reply, 0);
-                _reply.readException();
-                _result = _reply.readInt();
-            } finally {
-                _reply.recycle();
-                _data.recycle();
-            }
-            return _result;
-        }
-    }
-
-    static final int TRANSACTION_add = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
-}
-
-public int add(int a, int b) throws android.os.RemoteException;
-</code></pre>
-
-<hr />
 
 <p>自动生成的代码有点乱，我们可以把它给格式化一下，可以看到编译工具为我们生成了一个接口IDemoManager,继承于IInterface，啥事也没干；一个add方法，一个静态的内部抽象类，继承与Binder，实现IDemoManager本身，我们来详细看看他的每一部分</p>
 

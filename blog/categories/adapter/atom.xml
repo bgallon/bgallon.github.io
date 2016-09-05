@@ -4,7 +4,7 @@
   <title><![CDATA[Category: adapter | 狂奔的蜗牛]]></title>
   <link href="http://bgallon.github.io/blog/categories/adapter/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-03T12:05:00+08:00</updated>
+  <updated>2016-09-05T23:06:00+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan]]></name>
@@ -12,6 +12,124 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[代理模式]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi/"/>
+    <updated>2016-09-03T14:59:28+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi</id>
+    <content type="html"><![CDATA[<p>所谓代理，就是一个人或者机构代表另一个人或者机构采取行动。在一些情况下，一个客户不想或者不能够直接引用一个对象，而代理对象可以在客户端和目标对象之间起到中介的作用。</p>
+
+<!--more-->
+
+
+<p><img src="http://i1.piimg.com/567571/a74ac82fd02cddc9.gif" alt="" /></p>
+
+<p>Subject:委托对象和代理对象的共同接口</p>
+
+<p>RealSubject:委托对象</p>
+
+<p>Proxy:代理对象</p>
+
+<h4>代理实现分类：</h4>
+
+<ul>
+<li><p>静态代理</p>
+
+<p>  代理类是在编译时就实现好了。</p></li>
+<li><p>动态代理</p>
+
+<p>  动态代理类的源码是在程序运行期间由JVM根据反射等机制动态的生成，所以不存在代理类的字节码文件。</p></li>
+</ul>
+
+
+<h4>静态代理</h4>
+
+<pre><code class="java 公共接口">public interface Subject {
+    public void request();
+}
+</code></pre>
+
+<pre><code class="java 委托对象">
+public class RealSubject implements Subject {
+
+    @Override
+    public void request() {
+        System.out.println("request");
+    }
+
+}
+</code></pre>
+
+<pre><code class="java 代理对象">public class Proxy implements Subject{
+    private Subject mSubject;
+
+    public Proxy(Subject subject){
+        mSubject = subject;
+    }
+
+    @Override
+    public void request() {
+        System.out.println("start request");
+        if(null != mSubject){
+            mSubject.request();
+        }
+        System.out.println("end request");
+    }
+
+}
+</code></pre>
+
+<p>静态代理类优缺点</p>
+
+<p>优点：业务类只需要关注业务逻辑本身，保证了业务类的重用性。这是代理的共有优点。</p>
+
+<p>缺点：</p>
+
+<ul>
+<li>代理对象的一个接口只服务于一种类型的对象，如果要代理的方法很多，势必要为每一种方法都进行代理，静态代理在程序规模稍大时就无法胜任了。</li>
+<li>如果接口增加一个方法，除了所有实现类需要实现这个方法外，所有代理类也需要实现此方法。增加了代码维护的复杂度。</li>
+</ul>
+
+
+<h4>动态代理</h4>
+
+<p>实现动态代理模式，首先我们需要创建一个调度器，只需实现InvocationHandler接口即可</p>
+
+<pre><code class="java 调度器">public class SubjectHandler implements InvocationHandler{
+    private Object delegate;
+
+    public SubjectHandler(Object delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args)
+            throws Throwable {
+        System.out.println("start invoke");
+        Object result = method.invoke(delegate, args);
+        System.out.println("end invoke");
+        return result; 
+    }
+}
+</code></pre>
+
+<pre><code class="java">Subject delegate = new RealSubject();
+SubjectHandler handler = new SubjectHandler(delegate);
+Subject proxy = (Subject)java.lang.reflect.Proxy.newProxyInstance(  
+    delegate.getClass().getClassLoader(),   
+    delegate.getClass().getInterfaces(),   
+    handler);  
+proxy.request();
+</code></pre>
+
+<p>优点：
+动态代理与静态代理相比较，最大的好处是接口中声明的所有方法都被转移到调用处理器一个集中的方法中处理（InvocationHandler.invoke）。这样，在接口方法数量比较多的时候，我们可以进行灵活处理，而不需要像静态代理那样每一个方法进行中转。在本示例中看不出来，因为invoke方法体内嵌入了具体的外围业务（记录任务处理前后时间并计算时间差），实际中可以类似Spring AOP那样配置外围业务。</p>
+
+<p>缺点：
+无法摆脱仅支持 interface 代理的桎梏，因为它的设计注定了这个遗憾。回想一下那些动态生成的代理类的继承关系图，它们已经注定有一个共同的父类叫 Proxy。Java 的继承机制注定了这些动态代理类们无法实现对 class 的动态代理，原因是多继承在 Java 中本质上就行不通。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[FramtentPagerAdapter和FramgentStatePagerAdapter的区别]]></title>

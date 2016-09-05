@@ -7,7 +7,7 @@
 	<meta name="author" content="fishpan">
 
 	
-	<meta name="description" content=" Binder是进程间通讯的一种方式，Android开发中，Binder主要用于Service中，其中普通的service不涉及设计进程间通讯，我这里看下AIDL方式，看下整个的调用过程 阅读全文&rarr; Aug 14th, 2016 android, binder, 基础 ">
+	<meta name="description" content="Java中有一个加载器是ClassLoader，但是Java中的加载器不能直接应用在Android上边；对于Android上的应用，虽然都是用Java开发，并且使用了标准的Java编译器编译出来的Class文件，但是最终的Apk文件却包含的是dex类型的文件， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -77,6 +77,74 @@
     <article class="post">
 	<h2 class="title">
 		
+		<a href="/blog/2016/09/04/lei-jia-zai-qi-ji-chu/">
+		
+			类加载器基础</a>
+	</h2>
+	<div class="entry-content">
+		<p>Java中有一个加载器是ClassLoader，但是Java中的加载器不能直接应用在Android上边；对于Android上的应用，虽然都是用Java开发，并且使用了标准的Java编译器编译出来的Class文件，但是最终的Apk文件却包含的是dex类型的文件，dex文件是将所需的所有Class文件重新打包；由于dex文件是一种优化过的class文件，所以并不能直接用ClassLoader加载, <a href="https://medium.com/@HeadFirstDroid/how-apps-are-built-and-run-on-the-android-runtime-art-c027f73edb09#.ul2b6736x">class到apk的过程</a>，使用ClassLoader会出现什么问题可以看下这篇文章<a href="http://blog.csdn.net/jiangwei0910410003/article/details/17679823"> Android中的动态加载机制</a>,为了在Android中能够动态加载，Android提供了两个DexClassLoader及PathClassLoader。</p>
+
+
+		
+		<a href="/blog/2016/09/04/lei-jia-zai-qi-ji-chu/" class="more-link">阅读全文&rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+Sep 4th, 2016</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/android/'>android</a>, <a class='category' href='/blog/categories/cha-jian-hua/'>插件化</a>
+
+
+</div>
+	
+</div></article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2016/09/03/dai-li-mo-shi/">
+		
+			代理模式</a>
+	</h2>
+	<div class="entry-content">
+		<p>所谓代理，就是一个人或者机构代表另一个人或者机构采取行动。在一些情况下，一个客户不想或者不能够直接引用一个对象，而代理对象可以在客户端和目标对象之间起到中介的作用。</p>
+
+
+		
+		<a href="/blog/2016/09/03/dai-li-mo-shi/" class="more-link">阅读全文&rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+Sep 3rd, 2016</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/adapter/'>adapter</a>, <a class='category' href='/blog/categories/android/'>android</a>, <a class='category' href='/blog/categories/jin-jie/'>进阶</a>
+
+
+</div>
+	
+</div></article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
 		<a href="/blog/2016/08/14/ipcji-zhi-binder/">
 		
 			IPC机制-Binder</a>
@@ -105,8 +173,7 @@ Aug 14th, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 
     <article class="post">
@@ -140,8 +207,7 @@ Aug 14th, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 
     <article class="post">
@@ -175,8 +241,7 @@ Aug 13th, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 
     <article class="post">
@@ -210,8 +275,7 @@ Aug 8th, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 
     <article class="post">
@@ -245,8 +309,7 @@ Aug 5th, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 
     <article class="post">
@@ -280,8 +343,7 @@ Aug 2nd, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 
     <article class="post">
@@ -315,8 +377,7 @@ Aug 1st, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 
     <article class="post">
@@ -350,8 +411,7 @@ Jul 31st, 2016</div>
 
 </div>
 	
-</div>
-</article>
+</div></article>
 
 <nav id="pagenavi">
     

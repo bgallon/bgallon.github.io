@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://bgallon.github.io/blog/2016/09/04/lei-jia-zai-qi-ji-chu/</loc>
+<lastmod>2016-09-04T15:24:23+08:00</lastmod>
+</url>
+<url>
+<loc>http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi/</loc>
+<lastmod>2016-09-03T14:59:28+08:00</lastmod>
+</url>
+<url>
 <loc>http://bgallon.github.io/blog/2016/08/14/ipcji-zhi-binder/</loc>
 <lastmod>2016-08-14T10:43:45+08:00</lastmod>
 </url>
@@ -64,5 +72,8 @@
 </url>
 <url>
 <loc>http://bgallon.github.io/blog/categories/ji-chu/</loc>
+</url>
+<url>
+<loc>http://bgallon.github.io/blog/categories/cha-jian-hua/</loc>
 </url>
 </urlset>
