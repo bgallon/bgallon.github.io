@@ -1,0 +1,205 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>访问插件中的资源 - Just Do IT.</title>
+	<meta name="author" content="fishpan(fishpan_oliver@sina.com)">
+
+	
+	<meta name="description" content="我们已经知道了如何加载插件的类文件，能够利用ClassLoader创建实例执行方法，但是在Android中如何访问插件中的资源呢？ 插件可以分成两类，一是插件已经是一个安装的apk,这里获取资源较为方便，我们可以使用createPackageContext方法获取上下文，既然获取了上下文， &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="" rel="alternate" title="Just Do IT." type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">Just Do IT.</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.baidu.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:bgallon.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+    
+	</div>
+	<form class="search" action="https://www.baidu.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:bgallon.github.io">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">访问插件中的资源</h2>
+	<div class="entry-content"><p>我们已经知道了如何加载插件的类文件，能够利用ClassLoader创建实例执行方法，但是在Android中如何访问插件中的资源呢？</p>
+
+<!--more-->
+
+
+<p>插件可以分成两类，一是插件已经是一个安装的apk,这里获取资源较为方便，我们可以使用createPackageContext方法获取上下文，既然获取了上下文，我们就可以获取资源。二是插件未进行安装，这个有点麻烦，如何获取未安装apk中的资源文件呢?往下看。。</p>
+
+<h4>已安装的插件</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">PackageInfo</span> <span class="n">packInfo</span> <span class="o">=</span> <span class="n">getPackageManager</span><span class="o">().</span><span class="na">getPackageInfo</span><span class="o">(</span><span class="s">&quot;com.fishpan.plugin&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">sourceDir</span> <span class="o">=</span> <span class="n">packInfo</span><span class="o">.</span><span class="na">applicationInfo</span><span class="o">.</span><span class="na">sourceDir</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">PathClassLoader</span> <span class="n">clzzLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">PathClassLoader</span><span class="o">(</span><span class="n">sourceDir</span><span class="o">,</span> <span class="n">getClassLoader</span><span class="o">());</span>
+</span><span class='line'>        <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="n">packInfo</span><span class="o">.</span><span class="na">packageName</span> <span class="o">+</span> <span class="s">&quot;.R$color&quot;</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="n">clzzLoader</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">Field</span> <span class="n">field</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredField</span><span class="o">(</span><span class="s">&quot;main_color&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">resourceId</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="na">getInt</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">color</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">Context</span> <span class="n">plugnContext</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">createPackageContext</span><span class="o">(</span><span class="n">packInfo</span><span class="o">.</span><span class="na">packageName</span><span class="o">,</span> <span class="n">CONTEXT_IGNORE_SECURITY</span> <span class="o">|</span> <span class="n">CONTEXT_INCLUDE_CODE</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;fishpan_log&quot;</span><span class="o">,</span> <span class="s">&quot;path resource: &quot;</span> <span class="o">+</span> <span class="n">resourceId</span><span class="o">);</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">color</span> <span class="o">=</span> <span class="n">plugnContext</span><span class="o">.</span><span class="na">getResources</span><span class="o">().</span><span class="na">getColor</span><span class="o">(</span><span class="n">resourceId</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;fishpan_log&quot;</span><span class="o">,</span> <span class="s">&quot;path color: &quot;</span> <span class="o">+</span> <span class="n">color</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">mPathTxtView</span><span class="o">.</span><span class="na">setBackgroundColor</span><span class="o">(</span><span class="n">color</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_SHORT</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>首先通过classloader获取到要去到资源的id，然后通过createPackageContext方法获取到上下文，这样我们就可以获取到资源啦。是不是很简单</p>
+
+<h4>未安装的插件</h4>
+
+<p>未安装的插件我们无法获取到它的上下文，所以不能通过此种方式不能获取到resource，但是我们可以观察一下resource是怎么创建的，我们能不能自己创建resource呢?答案当然是可以，但是Google不推荐我们这样做，因此我们无法从通过正常途径来创建。我们通过分析源码发现，activity中getResources()方式实际上是ContentThemeWrapper中的一个方法，ContentThemeWrapper又调用来父类ContentWrapper的getResources方法，ContentWrapper中又调用了mBase.getResources()方法，我们知道mBase其实就是ContextImpl我们直接进去找,ContextImpl直接返回了mResources属性，我们可以看到它被赋值的地方，其中调用了mResourcesManager.getTopLevelResources这句话，跟进看看</p>
+
+<p><img src="http://i4.buimg.com/567571/eb2ac45c3e89f978.jpg" alt="" /></p>
+
+<p>貌似是用addAssetPath加载资源文件的。我们也可以调用这个方法啊，<strong><em>重点来了</em></strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">AssetManager</span> <span class="n">assetManager</span> <span class="o">=</span> <span class="n">AssetManager</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Method</span> <span class="n">addAssetPath</span> <span class="o">=</span> <span class="n">assetManager</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getMethod</span><span class="o">(</span><span class="s">&quot;addAssetPath&quot;</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">);</span><span class="c1">//反射调用方法addAssetPath(String path)</span>
+</span><span class='line'>            <span class="n">addAssetPath</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">assetManager</span><span class="o">,</span> <span class="n">apkPath</span><span class="o">);</span><span class="c1">//将未安装的Apk文件的添加进AssetManager中，第二个参数为apk文件的路径带apk名</span>
+</span><span class='line'>            <span class="n">Resources</span> <span class="n">superRes</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">getResources</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Resources</span> <span class="n">mResources</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Resources</span><span class="o">(</span><span class="n">assetManager</span><span class="o">,</span> <span class="n">superRes</span><span class="o">.</span><span class="na">getDisplayMetrics</span><span class="o">(),</span> <span class="n">superRes</span><span class="o">.</span><span class="na">getConfiguration</span><span class="o">());</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">mResources</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>你可以接着继续玩耍啦。</p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+Sep 6th, 2016</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/android/'>android</a>, <a class='category' href='/blog/categories/cha-jian-hua/'>插件化</a>
+
+
+</div>
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		
+	</div>
+	
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    fishpan(fishpan_oliver@sina.com)
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

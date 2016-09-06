@@ -1,17 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: android | 狂奔的蜗牛]]></title>
+  <title><![CDATA[Category: android | Just Do IT.]]></title>
   <link href="http://bgallon.github.io/blog/categories/android/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-05T23:06:00+08:00</updated>
+  <updated>2016-09-06T23:11:45+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
-    <name><![CDATA[fishpan]]></name>
+    <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[访问插件中的资源]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/06/fang-wen-cha-jian-zhong-de-zi-yuan/"/>
+    <updated>2016-09-06T22:26:13+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/06/fang-wen-cha-jian-zhong-de-zi-yuan</id>
+    <content type="html"><![CDATA[<p>我们已经知道了如何加载插件的类文件，能够利用ClassLoader创建实例执行方法，但是在Android中如何访问插件中的资源呢？</p>
+
+<!--more-->
+
+
+<p>插件可以分成两类，一是插件已经是一个安装的apk,这里获取资源较为方便，我们可以使用createPackageContext方法获取上下文，既然获取了上下文，我们就可以获取资源。二是插件未进行安装，这个有点麻烦，如何获取未安装apk中的资源文件呢?往下看。。</p>
+
+<h4>已安装的插件</h4>
+
+<pre><code class="java">    try {
+            PackageInfo packInfo = getPackageManager().getPackageInfo("com.fishpan.plugin", 0);
+            String sourceDir = packInfo.applicationInfo.sourceDir;
+            PathClassLoader clzzLoader = new PathClassLoader(sourceDir, getClassLoader());
+            Class&lt;?&gt; clazz = Class.forName(packInfo.packageName + ".R$color", true, clzzLoader);
+            Field field = clazz.getDeclaredField("main_color");
+            int resourceId = field.getInt(R.color.class);
+            Context plugnContext = this.createPackageContext(packInfo.packageName, CONTEXT_IGNORE_SECURITY | CONTEXT_INCLUDE_CODE);
+            Log.d("fishpan_log", "path resource: " + resourceId);
+            int color = plugnContext.getResources().getColor(resourceId);
+            Log.d("fishpan_log", "path color: " + color);
+            mPathTxtView.setBackgroundColor(color);
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+</code></pre>
+
+<p>首先通过classloader获取到要去到资源的id，然后通过createPackageContext方法获取到上下文，这样我们就可以获取到资源啦。是不是很简单</p>
+
+<h4>未安装的插件</h4>
+
+<p>未安装的插件我们无法获取到它的上下文，所以不能通过此种方式不能获取到resource，但是我们可以观察一下resource是怎么创建的，我们能不能自己创建resource呢?答案当然是可以，但是Google不推荐我们这样做，因此我们无法从通过正常途径来创建。我们通过分析源码发现，activity中getResources()方式实际上是ContentThemeWrapper中的一个方法，ContentThemeWrapper又调用来父类ContentWrapper的getResources方法，ContentWrapper中又调用了mBase.getResources()方法，我们知道mBase其实就是ContextImpl我们直接进去找,ContextImpl直接返回了mResources属性，我们可以看到它被赋值的地方，其中调用了mResourcesManager.getTopLevelResources这句话，跟进看看</p>
+
+<p><img src="http://i4.buimg.com/567571/eb2ac45c3e89f978.jpg" alt="" /></p>
+
+<p>貌似是用addAssetPath加载资源文件的。我们也可以调用这个方法啊，<strong><em>重点来了</em></strong></p>
+
+<pre><code class="java">try {
+            AssetManager assetManager = AssetManager.class.newInstance();
+            Method addAssetPath = assetManager.getClass().getMethod("addAssetPath", String.class);//反射调用方法addAssetPath(String path)
+            addAssetPath.invoke(assetManager, apkPath);//将未安装的Apk文件的添加进AssetManager中，第二个参数为apk文件的路径带apk名
+            Resources superRes = this.getResources();
+            Resources mResources = new Resources(assetManager, superRes.getDisplayMetrics(), superRes.getConfiguration());
+            return mResources;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+</code></pre>
+
+<p>你可以接着继续玩耍啦。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[类加载器基础]]></title>
@@ -391,52 +449,6 @@ interface IDemoManager {
 <h4>总结</h4>
 
 <p>相比之下，FragmentViewPager会更加流畅，而FragmentStateViewPager会更节省资源，对于fragment比较多的情况下我们可以使用FragmentStateViewPager，较少时使用FragmentViewPager更为妥当一些。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[IPC机制-多进程]]></title>
-    <link href="http://bgallon.github.io/blog/2016/08/13/ipcji-zhi-duo-jin-cheng/"/>
-    <updated>2016-08-13T15:03:24+08:00</updated>
-    <id>http://bgallon.github.io/blog/2016/08/13/ipcji-zhi-duo-jin-cheng</id>
-    <content type="html"><![CDATA[<p>一个应用默认只有一个进程，这个进程的名字就是应用的包名，进程是系统分配资源和调度的基本单位，每个进程都要有自己的资源和空间，其它程序不能任意访问当前进程的空间，系统给每个进程分配的空间会有限制。</p>
-
-<!--more-->
-
-
-<p>但是这都是默认情况下的事情，伟大的程序员是不会屈服一个进程的，我就弄出多个进程来玩玩；Android系统也是蛮大方的，你要多个，好，我来满足你，你可以指定一些组件运行在不同的进程中，只需指定组件的：</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span>android:process
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>设置process属性的方式有两种：</p>
-
-<ul>
-<li>android:process=&ldquo;:remote&rdquo;,以冒号开头，冒号后边的字符是可以随意指定的。当然这只是一种缩写形式，全称应该是：包名+&ldquo;:remote"；这种形式表示该进程为当前应用的私有进程，其它应用的组件不可以和它跑在同一个进程中。</li>
-<li>android:process=&ldquo;xxx.xxx"表示运行在以这个名称的全局进程中，其它应用可以通过shareUID和他跑在同一个进程中；</li>
-</ul>
-
-
-<p>虽然开启多进程是非常非常简单，但是有很多坑，一不小心就掉进去了：</p>
-
-<ul>
-<li>Application多次创建，启动多进程的生活，Application会被多次创建，在application中我们可以通过当前进程名字，来初始化数据，防止无必要的初始化</li>
-<li>静态成员失效，各个进程是单独分配的内存，所以这里的静态成员变量将会失效</li>
-<li>文件共享，多个进程同时访问一个文件时，可能造成文件损坏丢失等情况</li>
-<li>断点调试的问题。调试就是跟踪程序运行过程中的堆栈信息，由于每个进程都有自己独立的内存空间和各自的堆栈，无法实现在不同的进程间调试</li>
-</ul>
-
 ]]></content>
   </entry>
   

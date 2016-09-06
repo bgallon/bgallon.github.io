@@ -1,17 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: 插件化 | 狂奔的蜗牛]]></title>
+  <title><![CDATA[Category: 插件化 | Just Do IT.]]></title>
   <link href="http://bgallon.github.io/blog/categories/cha-jian-hua/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-05T23:06:00+08:00</updated>
+  <updated>2016-09-06T23:11:45+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
-    <name><![CDATA[fishpan]]></name>
+    <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[访问插件中的资源]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/06/fang-wen-cha-jian-zhong-de-zi-yuan/"/>
+    <updated>2016-09-06T22:26:13+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/06/fang-wen-cha-jian-zhong-de-zi-yuan</id>
+    <content type="html"><![CDATA[<p>我们已经知道了如何加载插件的类文件，能够利用ClassLoader创建实例执行方法，但是在Android中如何访问插件中的资源呢？</p>
+
+<!--more-->
+
+
+<p>插件可以分成两类，一是插件已经是一个安装的apk,这里获取资源较为方便，我们可以使用createPackageContext方法获取上下文，既然获取了上下文，我们就可以获取资源。二是插件未进行安装，这个有点麻烦，如何获取未安装apk中的资源文件呢?往下看。。</p>
+
+<h4>已安装的插件</h4>
+
+<pre><code class="java">    try {
+            PackageInfo packInfo = getPackageManager().getPackageInfo("com.fishpan.plugin", 0);
+            String sourceDir = packInfo.applicationInfo.sourceDir;
+            PathClassLoader clzzLoader = new PathClassLoader(sourceDir, getClassLoader());
+            Class&lt;?&gt; clazz = Class.forName(packInfo.packageName + ".R$color", true, clzzLoader);
+            Field field = clazz.getDeclaredField("main_color");
+            int resourceId = field.getInt(R.color.class);
+            Context plugnContext = this.createPackageContext(packInfo.packageName, CONTEXT_IGNORE_SECURITY | CONTEXT_INCLUDE_CODE);
+            Log.d("fishpan_log", "path resource: " + resourceId);
+            int color = plugnContext.getResources().getColor(resourceId);
+            Log.d("fishpan_log", "path color: " + color);
+            mPathTxtView.setBackgroundColor(color);
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+</code></pre>
+
+<p>首先通过classloader获取到要去到资源的id，然后通过createPackageContext方法获取到上下文，这样我们就可以获取到资源啦。是不是很简单</p>
+
+<h4>未安装的插件</h4>
+
+<p>未安装的插件我们无法获取到它的上下文，所以不能通过此种方式不能获取到resource，但是我们可以观察一下resource是怎么创建的，我们能不能自己创建resource呢?答案当然是可以，但是Google不推荐我们这样做，因此我们无法从通过正常途径来创建。我们通过分析源码发现，activity中getResources()方式实际上是ContentThemeWrapper中的一个方法，ContentThemeWrapper又调用来父类ContentWrapper的getResources方法，ContentWrapper中又调用了mBase.getResources()方法，我们知道mBase其实就是ContextImpl我们直接进去找,ContextImpl直接返回了mResources属性，我们可以看到它被赋值的地方，其中调用了mResourcesManager.getTopLevelResources这句话，跟进看看</p>
+
+<p><img src="http://i4.buimg.com/567571/eb2ac45c3e89f978.jpg" alt="" /></p>
+
+<p>貌似是用addAssetPath加载资源文件的。我们也可以调用这个方法啊，<strong><em>重点来了</em></strong></p>
+
+<pre><code class="java">try {
+            AssetManager assetManager = AssetManager.class.newInstance();
+            Method addAssetPath = assetManager.getClass().getMethod("addAssetPath", String.class);//反射调用方法addAssetPath(String path)
+            addAssetPath.invoke(assetManager, apkPath);//将未安装的Apk文件的添加进AssetManager中，第二个参数为apk文件的路径带apk名
+            Resources superRes = this.getResources();
+            Resources mResources = new Resources(assetManager, superRes.getDisplayMetrics(), superRes.getConfiguration());
+            return mResources;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+</code></pre>
+
+<p>你可以接着继续玩耍啦。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[类加载器基础]]></title>
