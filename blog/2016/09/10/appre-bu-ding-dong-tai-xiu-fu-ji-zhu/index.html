@@ -94,7 +94,7 @@
 
 <p><img src="http://i4.buimg.com/567571/8d91e4631369c71f.jpg" alt="" /></p>
 
-<p>还有一个问题要处理，那就是CLASS_ISPREVERIFIED的问题，具体产生的原因和解决的过程可以看下<a href="http://blog.csdn.net/lmj623565791/article/details/49883661"> Android 热补丁动态修复框架小结 </a>以及<a href="https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400118620&amp;idx=1&amp;sn=b4fdd5055731290eef12ad0d17f39d4a">安卓App热补丁动态修复技术介绍</a></p>
+<p>还有一个问题要处理，那就是CLASS_ISPREVERIFIED的问题（亲测，这个问题在4.0系统出现，6.0系统没有发现，和Android的虚拟机有关系？待进一步研究！！），具体产生的原因和解决的过程可以看下<a href="http://blog.csdn.net/lmj623565791/article/details/49883661"> Android 热补丁动态修复框架小结 </a>以及<a href="https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400118620&amp;idx=1&amp;sn=b4fdd5055731290eef12ad0d17f39d4a">安卓App热补丁动态修复技术介绍</a></p>
 
 <p>总结一下:类中的static方法，private方法，构造方法中直接引用到的类和clazz都在同一个dex中的话，这个类就会被打上CLASS_ISPREVERIFIED,那为了阻止类打上CLASS_ISPREVERIFIED，就在构造法方法中引用别的dex文件。</p>
 
