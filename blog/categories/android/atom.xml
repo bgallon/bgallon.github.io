@@ -4,7 +4,7 @@
   <title><![CDATA[Category: android | Just Do IT.]]></title>
   <link href="http://bgallon.github.io/blog/categories/android/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-15T23:29:19+08:00</updated>
+  <updated>2016-09-15T23:33:36+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
@@ -52,6 +52,8 @@
 <p><a href="https://github.com/bunnyblue/DroidFix">https://github.com/bunnyblue/DroidFix</a></p>
 
 <p>这几个框架原理都是基于腾讯空间的热修复方案，还有其它的一些修复方案。</p>
+
+<p><a href="http://blog.csdn.net/u010386612/article/details/50885320">重点推荐这位同学的几个篇博客值得一看，很有收获</a></p>
 ]]></content>
   </entry>
   
