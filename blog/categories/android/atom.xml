@@ -4,7 +4,7 @@
   <title><![CDATA[Category: android | Just Do IT.]]></title>
   <link href="http://bgallon.github.io/blog/categories/android/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-06T23:19:22+08:00</updated>
+  <updated>2016-09-15T23:24:02+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
@@ -12,6 +12,48 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[APP热补丁动态修复技术]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/10/appre-bu-ding-dong-tai-xiu-fu-ji-zhu/"/>
+    <updated>2016-09-10T20:15:59+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/10/appre-bu-ding-dong-tai-xiu-fu-ji-zhu</id>
+    <content type="html"><![CDATA[<p>正常情况下，如果一个APP发布出去之后，突然发下有一个致命性bug机型修复，这个时候就有点尴尬了，发不出的包就像泼出去的水，再也收不回来了，我们只能发布一个紧急版本，重新打包，向各个应用市场提交新包审核之类的，相当麻烦。也会因此损失一部分用户。那今天来研究下如何避免这个问题的出现。</p>
+
+<!-- more -->
+
+
+<p>下看下ClassLoader是如何加载的，我们前面说到了加载使用的PathClassLoader及DexClassLoader，它们有一个共同的父类BaseDexClassLoader,BaseDexClassLoader的父类是ClassLoader，我们调用的LoaderClass方法实际上是ClassLoader中的方法</p>
+
+<p><img src="http://i4.buimg.com/567571/afaf1e69c5e64ac7.jpg" alt="" /></p>
+
+<p>重点是红色框框中的findClass，它在BaseDexClassLoader被覆盖了，看下BaseDexClassLoader中的findClass方法：</p>
+
+<p><img src="http://i4.buimg.com/567571/cbe05a1a379584e2.jpg" alt="" /></p>
+
+<p>我们再跟进PathList中看看</p>
+
+<p><img src="http://i4.buimg.com/567571/1204c8d69b02a607.jpg" alt="" /></p>
+
+<p>就是遍历dexElements找到目标类，找到就返回，这个正是我们想要，我们可以通过反射把修复过好的dex文件插入到dexEelements最前面，这样我们就可以达到覆盖有文件的原来有问题的dex文件，一次来达到修复bug的目的，O(∩_∩)O哈哈哈~</p>
+
+<p><img src="http://i4.buimg.com/567571/8d91e4631369c71f.jpg" alt="" /></p>
+
+<p>还有一个问题要处理，那就是CLASS_ISPREVERIFIED的问题，具体产生的原因和解决的过程可以看下<a href="http://blog.csdn.net/lmj623565791/article/details/49883661"> Android 热补丁动态修复框架小结 </a>以及<a href="https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400118620&amp;idx=1&amp;sn=b4fdd5055731290eef12ad0d17f39d4a">安卓App热补丁动态修复技术介绍</a></p>
+
+<p>总结一下:类中的static方法，private方法，构造方法中直接引用到的类和clazz都在同一个dex中的话，这个类就会被打上CLASS_ISPREVERIFIED,那为了阻止类打上CLASS_ISPREVERIFIED，就在构造法方法中引用别的dex文件。</p>
+
+<h3>几个开源的热修复框架：</h3>
+
+<p><a href="https://github.com/dodola/HotFix">https://github.com/dodola/HotFix</a></p>
+
+<p><a href="https://github.com/jasonross/Nuwa">https://github.com/jasonross/Nuwa</a></p>
+
+<p><a href="https://github.com/bunnyblue/DroidFix">https://github.com/bunnyblue/DroidFix</a></p>
+
+<p>这几个框架原理都是基于腾讯空间的热修复方案，还有其它的一些修复方案。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[访问插件中的资源]]></title>
@@ -406,49 +448,6 @@ interface IDemoManager {
 <li>Proxy#add 此方法运行在客户端，当客户端调用此方法时，会输入型参数write进<em>data，输出型参数write进</em>reply,紧接着会调用transact方法来发起RPC请求，当前线程挂起；服务端的onTransact方法被调用，调用结束后，返回数据会在_reply中。</li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FramtentPagerAdapter和FramgentStatePagerAdapter的区别]]></title>
-    <link href="http://bgallon.github.io/blog/2016/08/14/framtentpageradapterhe-framgentstatepageradapterde-qu-bie/"/>
-    <updated>2016-08-14T10:43:45+08:00</updated>
-    <id>http://bgallon.github.io/blog/2016/08/14/framtentpageradapterhe-framgentstatepageradapterde-qu-bie</id>
-    <content type="html"><![CDATA[<p>平时还真的很少关心FramgmentStatsPagerAdpater和FragmentPagerAdapter，以前只是两者有区别，但是不是很清楚到底有啥区别，今天就特别写了一个demo，来研究了下两者的区别</p>
-
-<!--more-->
-
-
-<h4>FragmentStateViewPager</h4>
-
-<p>很多资料都在说：这个适配器是实现多个fragment界面的滑动时非常有效，当Fragment对用户不可见时，整个fragment会被销毁，只会保存fragment的状态，更适合当fragment比较多的时候使用，而且消耗的资源更少:我写了段代码在Fragment的onCreate，onCreateView，onDestory,onDestoryView方法中打印日志，观察它的生命周期：
-我进入activity一直滑动到第三个Fragment为止，日志如下</p>
-
-<p><img src="http://i2.buimg.com/567571/235e5452e84d1730.jpg" alt="" /></p>
-
-<p>通过日志我们可以发现：</p>
-
-<ul>
-<li>当进入Activity时，会创建两个Fragment</li>
-<li>向右滑一下到1，创建第三个fragment</li>
-<li>再向右滑一下到2，这个时候不仅仅都创建了一个fragment，而且还销毁了第一个fragment</li>
-<li>再向右滑一下到3，这个时候同样，创建一个销毁一个</li>
-</ul>
-
-
-<p>可见，默认情况下没有设置viewPager的offscreenPageLimit属性时，当前fragment的保留总数最多是三个，及当前选中的fragment和选中左右两个fragment（可能没有），其它的fragment就会被销毁，并且还会保留销毁的fragment的状态，待重建时进行恢复（onSaveInstanceState方法），所以我觉得上边说的当fragment不可见时就会被销毁时错误的，严格的来讲应该是在缓存fragment之外的fragment会被销毁，<strong><em>并不是不可见就会被销毁</em></strong></p>
-
-<h4>FragmentViewPager</h4>
-
-<p>这个是ViewPager+Fragment常用的适配器，我们经常会使用，虽然常见我为了弄清楚有啥区别，同样做了一个实验，在生命周期打印日志，操作步骤和上边的FragmentStateViewPager一致，日志如下:</p>
-
-<p><img src="http://i1.buimg.com/567571/3828d9ebb9dc03f8.jpg" alt="" /></p>
-
-<p>从日志中我们可以发现，基本上和FragmentStateViewPager类似，但是其中缺少fragment销毁的操作，这就是他们的区别，fragmentStatePagerAdapter会把缓存之外的fragment销毁，而FragmentViewPager则不会，还会进行保留。</p>
-
-<h4>总结</h4>
-
-<p>相比之下，FragmentViewPager会更加流畅，而FragmentStateViewPager会更节省资源，对于fragment比较多的情况下我们可以使用FragmentStateViewPager，较少时使用FragmentViewPager更为妥当一些。</p>
 ]]></content>
   </entry>
   

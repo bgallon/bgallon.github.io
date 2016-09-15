@@ -1,0 +1,161 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>APP热补丁动态修复技术 - Just Do IT.</title>
+	<meta name="author" content="fishpan(fishpan_oliver@sina.com)">
+
+	
+	<meta name="description" content="正常情况下，如果一个APP发布出去之后，突然发下有一个致命性bug机型修复，这个时候就有点尴尬了，发不出的包就像泼出去的水，再也收不回来了，我们只能发布一个紧急版本，重新打包，向各个应用市场提交新包审核之类的，相当麻烦。也会因此损失一部分用户。那今天来研究下如何避免这个问题的出现。 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="" rel="alternate" title="Just Do IT." type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">Just Do IT.</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.baidu.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:bgallon.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+    
+	</div>
+	<form class="search" action="https://www.baidu.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:bgallon.github.io">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">APP热补丁动态修复技术</h2>
+	<div class="entry-content"><p>正常情况下，如果一个APP发布出去之后，突然发下有一个致命性bug机型修复，这个时候就有点尴尬了，发不出的包就像泼出去的水，再也收不回来了，我们只能发布一个紧急版本，重新打包，向各个应用市场提交新包审核之类的，相当麻烦。也会因此损失一部分用户。那今天来研究下如何避免这个问题的出现。</p>
+
+<!-- more -->
+
+
+<p>下看下ClassLoader是如何加载的，我们前面说到了加载使用的PathClassLoader及DexClassLoader，它们有一个共同的父类BaseDexClassLoader,BaseDexClassLoader的父类是ClassLoader，我们调用的LoaderClass方法实际上是ClassLoader中的方法</p>
+
+<p><img src="http://i4.buimg.com/567571/afaf1e69c5e64ac7.jpg" alt="" /></p>
+
+<p>重点是红色框框中的findClass，它在BaseDexClassLoader被覆盖了，看下BaseDexClassLoader中的findClass方法：</p>
+
+<p><img src="http://i4.buimg.com/567571/cbe05a1a379584e2.jpg" alt="" /></p>
+
+<p>我们再跟进PathList中看看</p>
+
+<p><img src="http://i4.buimg.com/567571/1204c8d69b02a607.jpg" alt="" /></p>
+
+<p>就是遍历dexElements找到目标类，找到就返回，这个正是我们想要，我们可以通过反射把修复过好的dex文件插入到dexEelements最前面，这样我们就可以达到覆盖有文件的原来有问题的dex文件，一次来达到修复bug的目的，O(∩_∩)O哈哈哈~</p>
+
+<p><img src="http://i4.buimg.com/567571/8d91e4631369c71f.jpg" alt="" /></p>
+
+<p>还有一个问题要处理，那就是CLASS_ISPREVERIFIED的问题，具体产生的原因和解决的过程可以看下<a href="http://blog.csdn.net/lmj623565791/article/details/49883661"> Android 热补丁动态修复框架小结 </a>以及<a href="https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400118620&amp;idx=1&amp;sn=b4fdd5055731290eef12ad0d17f39d4a">安卓App热补丁动态修复技术介绍</a></p>
+
+<p>总结一下:类中的static方法，private方法，构造方法中直接引用到的类和clazz都在同一个dex中的话，这个类就会被打上CLASS_ISPREVERIFIED,那为了阻止类打上CLASS_ISPREVERIFIED，就在构造法方法中引用别的dex文件。</p>
+
+<h3>几个开源的热修复框架：</h3>
+
+<p><a href="https://github.com/dodola/HotFix">https://github.com/dodola/HotFix</a></p>
+
+<p><a href="https://github.com/jasonross/Nuwa">https://github.com/jasonross/Nuwa</a></p>
+
+<p><a href="https://github.com/bunnyblue/DroidFix">https://github.com/bunnyblue/DroidFix</a></p>
+
+<p>这几个框架原理都是基于腾讯空间的热修复方案，还有其它的一些修复方案。</p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+Sep 10th, 2016</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/android/'>android</a>, <a class='category' href='/blog/categories/re-bu-ding/'>热补丁</a>
+
+
+</div>
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		
+	</div>
+	
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    fishpan(fishpan_oliver@sina.com)
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

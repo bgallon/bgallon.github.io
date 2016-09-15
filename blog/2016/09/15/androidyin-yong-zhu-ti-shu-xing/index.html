@@ -1,0 +1,151 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Android引用主题属性 - Just Do IT.</title>
+	<meta name="author" content="fishpan(fishpan_oliver@sina.com)">
+
+	
+	<meta name="description" content="平时我们用的最多的是使用@引用字符串，图片等资源；但是有时候我们希望控件的属性能够根据主题的变化来动态设置，这是我们就可以考虑用到引用主题属性了，在此做个记录 首先我们先确认主题中有这个属性，我们可以自定义一个属性，也可以使用原本就有的属性，下面以添加引用自定义属性为例 自定义属性 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="" rel="alternate" title="Just Do IT." type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">Just Do IT.</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.baidu.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:bgallon.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+    
+	</div>
+	<form class="search" action="https://www.baidu.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:bgallon.github.io">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">Android引用主题属性</h2>
+	<div class="entry-content"><p>平时我们用的最多的是使用@引用字符串，图片等资源；但是有时候我们希望控件的属性能够根据主题的变化来动态设置，这是我们就可以考虑用到引用主题属性了，在此做个记录</p>
+
+<!--  more  -->
+
+
+<p>首先我们先确认主题中有这个属性，我们可以自定义一个属性，也可以使用原本就有的属性，下面以添加引用自定义属性为例</p>
+
+<h4>自定义属性</h4>
+
+<p>在values文件夹中新建attrs.xml文件，添加一个属性</p>
+
+<p><img src="http://i1.piimg.com/567571/4f58388cfa4aef99.jpg" alt="" /></p>
+
+<h4>设置主题</h4>
+
+<p>新建自己APP的主题，并设置好属性的值</p>
+
+<p><img src="http://i2.buimg.com/567571/dd7c6f742e070471.jpg" alt="" /></p>
+
+<h4>引用自定义属性</h4>
+
+<p><img src="http://i2.buimg.com/567571/532bd8cdcd806b73.jpg" alt="" /></p>
+
+<p>比较简单的就实现了我们想要的效果，觉得在平时这才是比较的标准的写法，可以动态的修改引用的资源，比如app改版换颜色，我们只需该相应主题中的颜色配置就行了，而不用该xml布局文件，直接写在xml布局文件中，改动这种的话，改起来也麻烦且无聊着。</p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+Sep 15th, 2016</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/andorid/'>andorid</a>
+
+
+</div>
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		
+	</div>
+	
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    fishpan(fishpan_oliver@sina.com)
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: andorid | Just Do IT.]]></title>
+  <link href="http://bgallon.github.io/blog/categories/andorid/atom.xml" rel="self"/>
+  <link href="http://bgallon.github.io/"/>
+  <updated>2016-09-15T23:24:02+08:00</updated>
+  <id>http://bgallon.github.io/</id>
+  <author>
+    <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Android引用主题属性]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/15/androidyin-yong-zhu-ti-shu-xing/"/>
+    <updated>2016-09-15T22:59:44+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/15/androidyin-yong-zhu-ti-shu-xing</id>
+    <content type="html"><![CDATA[<p>平时我们用的最多的是使用@引用字符串，图片等资源；但是有时候我们希望控件的属性能够根据主题的变化来动态设置，这是我们就可以考虑用到引用主题属性了，在此做个记录</p>
+
+<!--  more  -->
+
+
+<p>首先我们先确认主题中有这个属性，我们可以自定义一个属性，也可以使用原本就有的属性，下面以添加引用自定义属性为例</p>
+
+<h4>自定义属性</h4>
+
+<p>在values文件夹中新建attrs.xml文件，添加一个属性</p>
+
+<p><img src="http://i1.piimg.com/567571/4f58388cfa4aef99.jpg" alt="" /></p>
+
+<h4>设置主题</h4>
+
+<p>新建自己APP的主题，并设置好属性的值</p>
+
+<p><img src="http://i2.buimg.com/567571/dd7c6f742e070471.jpg" alt="" /></p>
+
+<h4>引用自定义属性</h4>
+
+<p><img src="http://i2.buimg.com/567571/532bd8cdcd806b73.jpg" alt="" /></p>
+
+<p>比较简单的就实现了我们想要的效果，觉得在平时这才是比较的标准的写法，可以动态的修改引用的资源，比如app改版换颜色，我们只需该相应主题中的颜色配置就行了，而不用该xml布局文件，直接写在xml布局文件中，改动这种的话，改起来也麻烦且无聊着。</p>
+]]></content>
+  </entry>
+  
+</feed>
