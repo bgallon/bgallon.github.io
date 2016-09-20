@@ -4,7 +4,7 @@
   <title><![CDATA[Just Do IT.]]></title>
   <link href="http://bgallon.github.io/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-20T22:28:59+08:00</updated>
+  <updated>2016-09-20T23:17:54+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
@@ -12,6 +12,86 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Android Studio检测内存泄漏]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/20/android-studiojian-ce-nei-cun-xie-lou/"/>
+    <updated>2016-09-20T22:40:03+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/20/android-studiojian-ce-nei-cun-xie-lou</id>
+    <content type="html"><![CDATA[<p>首先先说明下，Java中也是会出现内存泄漏的，有的同学说Java怎么会出现内存泄漏呢，Java不是有垃圾回收机制吗?这个不是C++同学应该考虑的事情嘛？对！没错，Java也会出现内存泄漏，而出现的原因是无效的引用，导致本来需要被垃圾回收器回收的对象没有被回收掉，后期或具体说到那些原因会导致内存泄漏，今天先说说怎么检测内存泄漏。</p>
+
+<!--more-->
+
+
+<p>Android Studio这个工具就是好，可能你刚刚使用的时候觉得，又慢又耗内存，电脑卡的不要不要的，但是确实比较好用，用一段时间果然是离不开了，有多好就自行Google或者百度吧。今天讲讲如何利用Android studio来检测内存泄漏。</p>
+
+<p>首先我们建立一个demo项目，很简单点击MainActivity中的按钮，跳转到SecondActivity中，再返回过来，代码如下：</p>
+
+<figure class='code'><figcaption><span>MainActivity.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MainActivity</span> <span class="kd">extends</span> <span class="n">AppCompatActivity</span> <span class="o">{</span>
+</span><span class='line'><span class="nd">@Override</span>
+</span><span class='line'><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">setContentView</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">activity_main</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">view</span><span class="o">){</span>
+</span><span class='line'>    <span class="n">Intent</span> <span class="n">intent</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Intent</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">SecondActivity</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">startActivity</span><span class="o">(</span><span class="n">intent</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>SecondActivity.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SecondActivity</span> <span class="kd">extends</span> <span class="n">AppCompatActivity</span> <span class="o">{</span>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="n">Activity</span> <span class="n">mActivity</span><span class="o">;</span>
+</span><span class='line'><span class="nd">@Override</span>
+</span><span class='line'><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">setContentView</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">activity_second</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">mActivity</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>先看看庐山真面目，这就是今天的主角</p>
+
+<p><img src="http://i2.buimg.com/567571/7d713a8e39ff9223.jpg" alt="" /></p>
+
+<p>通过观察Memory可以看到应用内存使用情况，通过<img src="http://i2.buimg.com/567571/e7f172a6469945df.jpg" alt="" />来出发一次GC，通过点击<img src="http://i2.buimg.com/567571/9f957490ef5f5665.jpg" alt="" />稍等片刻之后，就可以进入HPROF Viewer界面，这个界面是重点，通过这个界面才能看出内存泄漏的情况，前面那些都是准备。</p>
+
+<p><img src="http://i2.buimg.com/567571/b3e1417d99e56062.jpg" alt="" /></p>
+
+<p>打开文件第一步，就是点击Analyzer Tasks中的绿色三角形来执行以下，可能在打开的时候Analyzer Tasks窗口是缩放的可以展开。点击三角形一段时间后，Analysis Results窗口， 重点是Leaked Activities这个是泄漏的Activity，双击其中的条目，可以在Reference Trees窗口中查看到，相关的引用情况，这就是泄漏的地方啦。</p>
+
+<p><strong><em>不要点击class Name窗口中的类，否则没办法找到Reference Tree等信息，具体为啥我也不知道，待研究</em></strong></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[计算BitMap占用内存的大小]]></title>

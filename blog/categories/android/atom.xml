@@ -4,7 +4,7 @@
   <title><![CDATA[Category: android | Just Do IT.]]></title>
   <link href="http://bgallon.github.io/blog/categories/android/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-20T22:28:59+08:00</updated>
+  <updated>2016-09-20T23:17:54+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
@@ -12,6 +12,60 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Android Studio检测内存泄漏]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/20/android-studiojian-ce-nei-cun-xie-lou/"/>
+    <updated>2016-09-20T22:40:03+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/20/android-studiojian-ce-nei-cun-xie-lou</id>
+    <content type="html"><![CDATA[<p>首先先说明下，Java中也是会出现内存泄漏的，有的同学说Java怎么会出现内存泄漏呢，Java不是有垃圾回收机制吗?这个不是C++同学应该考虑的事情嘛？对！没错，Java也会出现内存泄漏，而出现的原因是无效的引用，导致本来需要被垃圾回收器回收的对象没有被回收掉，后期或具体说到那些原因会导致内存泄漏，今天先说说怎么检测内存泄漏。</p>
+
+<!--more-->
+
+
+<p>Android Studio这个工具就是好，可能你刚刚使用的时候觉得，又慢又耗内存，电脑卡的不要不要的，但是确实比较好用，用一段时间果然是离不开了，有多好就自行Google或者百度吧。今天讲讲如何利用Android studio来检测内存泄漏。</p>
+
+<p>首先我们建立一个demo项目，很简单点击MainActivity中的按钮，跳转到SecondActivity中，再返回过来，代码如下：</p>
+
+<pre><code class="java MainActivity.java">    public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+
+    public void onClick(View view){
+        Intent intent = new Intent(this, SecondActivity.class);
+        startActivity(intent);
+    }
+}
+</code></pre>
+
+<pre><code class="java SecondActivity.java">    public class SecondActivity extends AppCompatActivity {
+    private static Activity mActivity;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_second);
+        mActivity = this;
+    }
+}
+</code></pre>
+
+<p>先看看庐山真面目，这就是今天的主角</p>
+
+<p><img src="http://i2.buimg.com/567571/7d713a8e39ff9223.jpg" alt="" /></p>
+
+<p>通过观察Memory可以看到应用内存使用情况，通过<img src="http://i2.buimg.com/567571/e7f172a6469945df.jpg" alt="" />来出发一次GC，通过点击<img src="http://i2.buimg.com/567571/9f957490ef5f5665.jpg" alt="" />稍等片刻之后，就可以进入HPROF Viewer界面，这个界面是重点，通过这个界面才能看出内存泄漏的情况，前面那些都是准备。</p>
+
+<p><img src="http://i2.buimg.com/567571/b3e1417d99e56062.jpg" alt="" /></p>
+
+<p>打开文件第一步，就是点击Analyzer Tasks中的绿色三角形来执行以下，可能在打开的时候Analyzer Tasks窗口是缩放的可以展开。点击三角形一段时间后，Analysis Results窗口， 重点是Leaked Activities这个是泄漏的Activity，双击其中的条目，可以在Reference Trees窗口中查看到，相关的引用情况，这就是泄漏的地方啦。</p>
+
+<p><strong><em>不要点击class Name窗口中的类，否则没办法找到Reference Tree等信息，具体为啥我也不知道，待研究</em></strong></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[计算BitMap占用内存的大小]]></title>
@@ -212,124 +266,6 @@
 <p><img src="http://i2.buimg.com/567571/7d89c35fce163706.gif" alt="" /></p>
 
 <p>另外这里使用插件类，都是使用反射完成的，我们可以定义一个公共的接口，这样在插件apk和宿主apk里放入接口，这样就不用使用反射了，用起来就比较简单和容易了。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[代理模式]]></title>
-    <link href="http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi/"/>
-    <updated>2016-09-03T14:59:28+08:00</updated>
-    <id>http://bgallon.github.io/blog/2016/09/03/dai-li-mo-shi</id>
-    <content type="html"><![CDATA[<p>所谓代理，就是一个人或者机构代表另一个人或者机构采取行动。在一些情况下，一个客户不想或者不能够直接引用一个对象，而代理对象可以在客户端和目标对象之间起到中介的作用。</p>
-
-<!--more-->
-
-
-<p><img src="http://i1.piimg.com/567571/a74ac82fd02cddc9.gif" alt="" /></p>
-
-<p>Subject:委托对象和代理对象的共同接口</p>
-
-<p>RealSubject:委托对象</p>
-
-<p>Proxy:代理对象</p>
-
-<h4>代理实现分类：</h4>
-
-<ul>
-<li><p>静态代理</p>
-
-<p>  代理类是在编译时就实现好了。</p></li>
-<li><p>动态代理</p>
-
-<p>  动态代理类的源码是在程序运行期间由JVM根据反射等机制动态的生成，所以不存在代理类的字节码文件。</p></li>
-</ul>
-
-
-<h4>静态代理</h4>
-
-<pre><code class="java 公共接口">public interface Subject {
-    public void request();
-}
-</code></pre>
-
-<pre><code class="java 委托对象">
-public class RealSubject implements Subject {
-
-    @Override
-    public void request() {
-        System.out.println("request");
-    }
-
-}
-</code></pre>
-
-<pre><code class="java 代理对象">public class Proxy implements Subject{
-    private Subject mSubject;
-
-    public Proxy(Subject subject){
-        mSubject = subject;
-    }
-
-    @Override
-    public void request() {
-        System.out.println("start request");
-        if(null != mSubject){
-            mSubject.request();
-        }
-        System.out.println("end request");
-    }
-
-}
-</code></pre>
-
-<p>静态代理类优缺点</p>
-
-<p>优点：业务类只需要关注业务逻辑本身，保证了业务类的重用性。这是代理的共有优点。</p>
-
-<p>缺点：</p>
-
-<ul>
-<li>代理对象的一个接口只服务于一种类型的对象，如果要代理的方法很多，势必要为每一种方法都进行代理，静态代理在程序规模稍大时就无法胜任了。</li>
-<li>如果接口增加一个方法，除了所有实现类需要实现这个方法外，所有代理类也需要实现此方法。增加了代码维护的复杂度。</li>
-</ul>
-
-
-<h4>动态代理</h4>
-
-<p>实现动态代理模式，首先我们需要创建一个调度器，只需实现InvocationHandler接口即可</p>
-
-<pre><code class="java 调度器">public class SubjectHandler implements InvocationHandler{
-    private Object delegate;
-
-    public SubjectHandler(Object delegate) {
-        this.delegate = delegate;
-    }
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args)
-            throws Throwable {
-        System.out.println("start invoke");
-        Object result = method.invoke(delegate, args);
-        System.out.println("end invoke");
-        return result; 
-    }
-}
-</code></pre>
-
-<pre><code class="java">Subject delegate = new RealSubject();
-SubjectHandler handler = new SubjectHandler(delegate);
-Subject proxy = (Subject)java.lang.reflect.Proxy.newProxyInstance(  
-    delegate.getClass().getClassLoader(),   
-    delegate.getClass().getInterfaces(),   
-    handler);  
-proxy.request();
-</code></pre>
-
-<p>优点：
-动态代理与静态代理相比较，最大的好处是接口中声明的所有方法都被转移到调用处理器一个集中的方法中处理（InvocationHandler.invoke）。这样，在接口方法数量比较多的时候，我们可以进行灵活处理，而不需要像静态代理那样每一个方法进行中转。在本示例中看不出来，因为invoke方法体内嵌入了具体的外围业务（记录任务处理前后时间并计算时间差），实际中可以类似Spring AOP那样配置外围业务。</p>
-
-<p>缺点：
-无法摆脱仅支持 interface 代理的桎梏，因为它的设计注定了这个遗憾。回想一下那些动态生成的代理类的继承关系图，它们已经注定有一个共同的父类叫 Proxy。Java 的继承机制注定了这些动态代理类们无法实现对 class 的动态代理，原因是多继承在 Java 中本质上就行不通。</p>
 ]]></content>
   </entry>
   
