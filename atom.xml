@@ -4,7 +4,7 @@
   <title><![CDATA[Just Do IT.]]></title>
   <link href="http://bgallon.github.io/atom.xml" rel="self"/>
   <link href="http://bgallon.github.io/"/>
-  <updated>2016-09-17T08:02:48+08:00</updated>
+  <updated>2016-09-20T22:28:59+08:00</updated>
   <id>http://bgallon.github.io/</id>
   <author>
     <name><![CDATA[fishpan(fishpan_oliver@sina.com)]]></name>
@@ -12,6 +12,40 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[计算BitMap占用内存的大小]]></title>
+    <link href="http://bgallon.github.io/blog/2016/09/20/ji-suan-bitmapde-da-xiao/"/>
+    <updated>2016-09-20T22:00:22+08:00</updated>
+    <id>http://bgallon.github.io/blog/2016/09/20/ji-suan-bitmapde-da-xiao</id>
+    <content type="html"><![CDATA[<p>Bitmap占用内存的大小不仅和它的长宽色彩格式有关，还和设备的屏幕密度，所在的drawable文件夹有关。我们以小米4手机（屏幕密度480），一张150*46的放在drawable-hdpi的图片为例，看下它用多大的内存。</p>
+
+<!--more-->
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kt">int</span> <span class="n">byteCount</span> <span class="o">=</span> <span class="n">BitmapFactory</span><span class="o">.</span><span class="na">decodeResource</span><span class="o">(</span><span class="n">getResources</span><span class="o">(),</span><span class="n">R</span><span class="o">.</span><span class="na">drawable</span><span class="o">.</span><span class="na">logo_bigger</span><span class="o">).</span><span class="na">getByteCount</span><span class="o">();</span>
+</span><span class='line'><span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;MainActivity&quot;</span><span class="o">,</span> <span class="s">&quot;byteCount:&quot;</span> <span class="o">+</span> <span class="n">byteCount</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>运行结果如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">D</span><span class="o">/</span><span class="nl">MainActivity:</span> <span class="nl">byteCount:</span><span class="mi">110400</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们来手动算一下，图片长150宽46,采用ARGB8888的格式，所占内存=150 * 46 * 4 = 27600，应该是这个值啊，为啥结果是110400呢？难道是算错了？等等，前面说了占用内存的大小和当前设备的密度及所在的drawable文件夹有关系。图片所在资源文件夹和设备的屏幕密度这两个参数分别对应着BitmapFactory中的inDensity和inTargetDensity。比如我们的图片在drawable-xhdpi文件夹下，那么inDensity值就为240；设备的屏幕密度为480dpi，因而inTargetDensity的值就为240。把图片显示到一个设备上要根据各自的屏幕密度进行缩放，这个缩放系数即为inTargetDensity除以inDensity，所以算的时候应该是这样的：所占内存 = 150 * （480 / 240）* 46 * (480 / 240) * 4 = 110400刚刚和我们日志中打印的一直。</p>
+
+<h4>结论</h4>
+
+<p>图片放的文件夹和占用内存有重大关系，当所在文件夹的屏幕密度小于设备密度时，图片会进行放大，这是占用的内存会升高，当图片放置的文件夹屏幕密度比设备密度大时，图片占用内存变小</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Android引用主题属性]]></title>

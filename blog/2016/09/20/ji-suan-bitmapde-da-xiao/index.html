@@ -1,0 +1,155 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>计算BitMap占用内存的大小 - Just Do IT.</title>
+	<meta name="author" content="fishpan(fishpan_oliver@sina.com)">
+
+	
+	<meta name="description" content="Bitmap占用内存的大小不仅和它的长宽色彩格式有关，还和设备的屏幕密度，所在的drawable文件夹有关。我们以小米4手机（屏幕密度480），一张150*46的放在drawable-hdpi的图片为例，看下它用多大的内存。 1
+2
+int byteCount = BitmapFactory. &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="" rel="alternate" title="Just Do IT." type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">Just Do IT.</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="https://www.baidu.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:bgallon.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+    
+	</div>
+	<form class="search" action="https://www.baidu.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:bgallon.github.io">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">计算BitMap占用内存的大小</h2>
+	<div class="entry-content"><p>Bitmap占用内存的大小不仅和它的长宽色彩格式有关，还和设备的屏幕密度，所在的drawable文件夹有关。我们以小米4手机（屏幕密度480），一张150*46的放在drawable-hdpi的图片为例，看下它用多大的内存。</p>
+
+<!--more-->
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kt">int</span> <span class="n">byteCount</span> <span class="o">=</span> <span class="n">BitmapFactory</span><span class="o">.</span><span class="na">decodeResource</span><span class="o">(</span><span class="n">getResources</span><span class="o">(),</span><span class="n">R</span><span class="o">.</span><span class="na">drawable</span><span class="o">.</span><span class="na">logo_bigger</span><span class="o">).</span><span class="na">getByteCount</span><span class="o">();</span>
+</span><span class='line'><span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;MainActivity&quot;</span><span class="o">,</span> <span class="s">&quot;byteCount:&quot;</span> <span class="o">+</span> <span class="n">byteCount</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>运行结果如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">D</span><span class="o">/</span><span class="nl">MainActivity:</span> <span class="nl">byteCount:</span><span class="mi">110400</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们来手动算一下，图片长150宽46,采用ARGB8888的格式，所占内存=150 * 46 * 4 = 27600，应该是这个值啊，为啥结果是110400呢？难道是算错了？等等，前面说了占用内存的大小和当前设备的密度及所在的drawable文件夹有关系。图片所在资源文件夹和设备的屏幕密度这两个参数分别对应着BitmapFactory中的inDensity和inTargetDensity。比如我们的图片在drawable-xhdpi文件夹下，那么inDensity值就为240；设备的屏幕密度为480dpi，因而inTargetDensity的值就为240。把图片显示到一个设备上要根据各自的屏幕密度进行缩放，这个缩放系数即为inTargetDensity除以inDensity，所以算的时候应该是这样的：所占内存 = 150 * （480 / 240）* 46 * (480 / 240) * 4 = 110400刚刚和我们日志中打印的一直。</p>
+
+<h4>结论</h4>
+
+<p>图片放的文件夹和占用内存有重大关系，当所在文件夹的屏幕密度小于设备密度时，图片会进行放大，这是占用的内存会升高，当图片放置的文件夹屏幕密度比设备密度大时，图片占用内存变小</p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+Sep 20th, 2016</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/android/'>android</a>, <a class='category' href='/blog/categories/jin-jie/'>进阶</a>
+
+
+</div>
+	
+</div></article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		
+	</div>
+	
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    fishpan(fishpan_oliver@sina.com)
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>
